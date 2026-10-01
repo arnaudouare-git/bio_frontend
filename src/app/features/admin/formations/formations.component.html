@@ -1,0 +1,92 @@
+<div class="min-h-screen bg-gray-50 p-4 sm:p-8">
+  <div class="max-w-3xl mx-auto">
+    <h1 class="text-2xl font-bold text-gray-900 mb-6">Formations</h1>
+
+    @if (erreur()) {
+      <p class="text-sm text-red-600 bg-red-50 border border-red-200 rounded-md px-3 py-2 mb-4">
+        {{ erreur() }}
+      </p>
+    }
+
+    <div class="mb-4">
+      @if (formulaireOuvert()) {
+        <div class="bg-white rounded-lg shadow p-5 space-y-3">
+          <p class="font-semibold text-gray-900">Nouvelle session de formation</p>
+          <div class="grid sm:grid-cols-2 gap-3">
+            <input [(ngModel)]="nouvelleFormation.titre" placeholder="Titre"
+                   class="text-sm border border-gray-300 rounded-md px-2 py-1.5" />
+            <input [(ngModel)]="nouvelleFormation.dateSession" type="datetime-local"
+                   class="text-sm border border-gray-300 rounded-md px-2 py-1.5" />
+            <input [(ngModel)]="nouvelleFormation.lieu" placeholder="Lieu"
+                   class="text-sm border border-gray-300 rounded-md px-2 py-1.5" />
+            <input [(ngModel)]="nouvelleFormation.formateur" placeholder="Formateur"
+                   class="text-sm border border-gray-300 rounded-md px-2 py-1.5" />
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <button (click)="creerFormation()" [disabled]="creationEnCours()"
+                    class="text-sm bg-bordeaux-600 text-white px-3 py-1.5 rounded-md hover:bg-bordeaux-700 disabled:opacity-50">
+              {{ creationEnCours() ? 'Création...' : 'Créer' }}
+            </button>
+            <button (click)="fermerFormulaire()" class="text-sm text-gray-600 px-3 py-1.5 hover:underline">
+              Annuler
+            </button>
+          </div>
+        </div>
+      } @else {
+        <button (click)="ouvrirFormulaire()"
+                class="text-sm bg-bordeaux-600 text-white px-4 py-2 rounded-md hover:bg-bordeaux-700">
+          + Nouvelle session
+        </button>
+      }
+    </div>
+
+    @if (chargement()) {
+      <p class="text-gray-500">Chargement...</p>
+    } @else if (formations().length === 0) {
+      <p class="text-gray-500">Aucune formation créée.</p>
+    } @else {
+      <div class="space-y-3">
+        @for (formation of formations(); track formation.id) {
+          <div class="bg-white rounded-lg shadow p-4">
+            <div class="flex items-start justify-between">
+              <div>
+                <p class="font-semibold text-gray-900">{{ formation.titre }}</p>
+                <p class="text-sm text-gray-500">
+                  {{ formation.dateSession | date: 'dd/MM/yyyy HH:mm' }} — {{ formation.lieu }}
+                </p>
+                <p class="text-sm text-gray-500">Formateur : {{ formation.formateur }}</p>
+                <p class="text-xs text-gray-400 mt-1">{{ formation.nombreParticipants }} participant(s)</p>
+              </div>
+              @if (inscriptionFormulaireOuvert() !== formation.id) {
+                <button (click)="ouvrirInscription(formation.id)" class="text-sm text-bordeaux-600 font-medium hover:underline">
+                  Inscrire un producteur
+                </button>
+              }
+            </div>
+
+            @if (inscriptionFormulaireOuvert() === formation.id) {
+              <div class="mt-3 bg-bordeaux-50 border border-bordeaux-200 rounded-md p-3 flex items-center gap-2">
+                <select
+                  [ngModel]="producteurSelectionne[formation.id]"
+                  (ngModelChange)="producteurSelectionne[formation.id] = $event"
+                  class="text-sm border border-gray-300 rounded-md px-2 py-1.5 flex-1">
+                  <option [ngValue]="null">Choisir un producteur...</option>
+                  @for (p of producteurs(); track p.id) {
+                    <option [ngValue]="p.id">{{ p.prenom }} {{ p.nom }} ({{ p.email }})</option>
+                  }
+                </select>
+                <button (click)="inscrire(formation)" [disabled]="inscriptionEnCours() === formation.id"
+                        class="text-sm bg-bordeaux-600 text-white px-3 py-1.5 rounded-md hover:bg-bordeaux-700 disabled:opacity-50">
+                  Inscrire
+                </button>
+                <button (click)="fermerInscription()" class="text-sm text-gray-600 px-2 hover:underline">
+                  Annuler
+                </button>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    }
+  </div>
+</div>

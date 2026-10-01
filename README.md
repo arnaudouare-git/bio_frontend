@@ -1,59 +1,104 @@
-# BioFrontend
+# BioConversion — Frontend (Angular)
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 22.2.0.
+Application web du projet **BioConversion** (Licence 3 RIT, Groupe 1 Soir) : mise en relation de
+producteurs de larves (protéines alternatives) avec des clients, avec suivi de serres connectées
+(IoT), paiements, avis, litiges et administration de la plateforme.
 
-## Development server
+Ce dépôt (`Bio_Frontend`) contient le frontend Angular. Le backend Spring Boot correspondant vit
+dans le dépôt `Bio_Backend` (voir [Backend](#backend)).
 
-To start a local development server, run:
+## Prérequis
+
+- Node.js 20+ et npm.
+- Le backend `Bio_Backend` démarré et accessible sur `http://localhost:8080` (voir sa propre
+  documentation pour le lancer). Sans lui, l'application affiche une notification d'erreur
+  ("Impossible de contacter le serveur") sur chaque page qui charge des données.
+
+## Installation
+
+```bash
+npm install
+```
+
+## Lancer en développement
 
 ```bash
 ng serve
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+Puis ouvrir `http://localhost:4200`. L'application recharge automatiquement à chaque modification
+des fichiers sources.
 
-## Code scaffolding
+## Variables d'environnement
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+L'URL de l'API backend est définie dans `src/environments/` :
 
-```bash
-ng generate component component-name
+| Fichier | Utilisé pour | Valeur |
+|---|---|---|
+| `environment.development.ts` | `ng serve` (dev) | `apiUrl: 'http://localhost:8080/api'` |
+| `environment.ts` | `ng build` (prod) | `apiUrl: 'http://localhost:8080/api'` |
+
+Pour pointer vers un backend déployé ailleurs, modifier la valeur `apiUrl` du fichier
+correspondant.
+
+## Comptes pour tester
+
+- **Client** / **Producteur** : à créer via la page d'inscription (`/inscription`). Un compte
+  Producteur doit ensuite être validé par un administrateur (formation suivie + pièce d'identité
+  vérifiée) avant de pouvoir vendre — voir `AdminService.activerCompte` côté backend.
+- **Administrateur** : compte de développement créé automatiquement au premier démarrage du
+  backend (`AdministrateurSeeder`) :
+  - Email : `admin@bioconversion.com`
+  - Mot de passe : `admin1234`
+
+  ⚠️ Ce compte est explicitement marqué "dev only" dans le code backend (identifiants en clair) —
+  à ne jamais utiliser tel quel en production.
+
+## Structure du projet
+
+```
+src/app/
+  core/
+    models/         # Interfaces TypeScript alignées sur les DTO backend
+    services/        # Appels HTTP vers l'API (un service par ressource)
+    guards/           # authGuard, roleGuard(['ROLE', ...])
+    interceptors/     # authInterceptor (JWT), errorInterceptor (erreurs API centralisées)
+  shared/
+    components/       # Composants réutilisables (toasts, cloche de notifications)
+  features/
+    auth/             # Connexion / inscription
+    accueil/           # Page d'accueil (liens selon le rôle)
+    produits/           # Catalogue (Client)
+    commandes/          # Historique de commandes, paiement, avis, litiges (Client)
+    producteur/         # Espace Producteur (produits, commandes reçues, serres/IoT, avis, paiements)
+    admin/               # Espace Administrateur (comptes, formations, litiges, statistiques)
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+Chaque espace (`producteur/`, `admin/`) est protégé par `roleGuard([...])` dans `app.routes.ts` et
+n'est accessible qu'au rôle concerné.
 
-```bash
-ng generate --help
-```
+## Fonctionnement général
 
-## Building
+- **Authentification** : JWT stateless, stocké dans le `localStorage` et rejoué automatiquement par
+  `authInterceptor` sur chaque requête. Une réponse `401` déconnecte l'utilisateur.
+- **Erreurs API** : `errorInterceptor` affiche automatiquement un message lisible (toast en bas de
+  l'écran) pour toute erreur backend non gérée localement par un composant, en réutilisant le
+  message renvoyé par l'API quand il existe.
+- **Notifications** : la cloche visible en haut à droite (une fois connecté) liste les
+  notifications internes de l'utilisateur (bienvenue, activation/suspension de compte, nouvelle
+  commande reçue pour un Producteur, etc.), consultées via `GET /api/notifications/utilisateur/{id}`.
 
-To build the project run:
-
-```bash
-ng build
-```
-
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
+## Tests
 
 ```bash
 ng test
 ```
 
-## Running end-to-end tests
+Un plan de tests manuels de bout en bout (parcours Client / Producteur / Administrateur) est
+disponible dans le document de conception du projet (`TESTS_MANUELS.md` à la racine de ce dépôt) —
+recommandé avant chaque démonstration.
 
-For end-to-end (e2e) testing, run:
+## Backend
 
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+Dépôt `Bio_Backend` (Spring Boot 3 / Java 17 / Spring Security JWT / PostgreSQL ou H2 selon profil).
+Voir sa documentation pour le lancement, les migrations et les identifiants de développement.

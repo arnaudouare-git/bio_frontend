@@ -1,22 +1,139 @@
-<div class="min-h-screen bg-gray-50 p-8">
-  <div class="max-w-2xl mx-auto bg-white rounded-lg shadow p-8">
-    @if (authService.currentUser(); as utilisateur) {
-      <h1 class="text-2xl font-bold text-gray-900 mb-2">
-        Bienvenue, {{ utilisateur.prenom }} {{ utilisateur.nom }}
-      </h1>
-      <p class="text-gray-600 mb-1">Email : {{ utilisateur.email }}</p>
-      <p class="text-gray-600 mb-1">Rôle : {{ utilisateur.role }}</p>
-      <p class="text-gray-600 mb-6">Statut de vérification : {{ utilisateur.statutVerificationCnib }}</p>
+<div class="min-h-screen bg-gray-50">
 
-      <p class="text-sm text-gray-500 mb-6">
-        Cette page est temporaire — elle confirme juste que la connexion fonctionne.
-        Les vrais écrans (catalogue, commandes, etc.) arrivent dans les prochaines phases.
+  <!-- Hero -->
+  <section class="bg-gradient-to-br from-bordeaux-800 via-bordeaux-700 to-bordeaux-600 text-white">
+    <div class="max-w-6xl mx-auto px-4 sm:px-8 py-16 sm:py-24">
+      @if (authService.currentUser(); as utilisateur) {
+        <p class="text-bordeaux-100 text-sm font-medium mb-2">Bienvenue, {{ utilisateur.prenom }}</p>
+        <div class="mb-4">
+          <span class="inline-block text-xs font-medium px-2 py-0.5 rounded-full" [class]="badgeStatut(utilisateur.statutVerificationCnib)">
+            {{ utilisateur.statutVerificationCnib }}
+          </span>
+        </div>
+      }
+
+      <h1 class="text-3xl sm:text-5xl font-bold tracking-tight max-w-2xl">
+        Les larves BSF, de producteur vérifié à votre porte.
+      </h1>
+      <p class="mt-4 text-bordeaux-100 max-w-xl text-base sm:text-lg">
+        BioConversion met en relation les producteurs burkinabè de larves de mouches soldats noires
+        avec les éleveurs et transformateurs, avec un suivi de production en temps réel et un
+        paiement sécurisé.
       </p>
 
-      <button (click)="seDeconnecter()"
-              class="bg-red-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-red-700">
-        Se déconnecter
-      </button>
+      <div class="mt-8 flex flex-wrap gap-3">
+        <a routerLink="/produits"
+           class="bg-white text-bordeaux-700 font-semibold py-2.5 px-5 rounded-md hover:bg-bordeaux-50">
+          Voir le catalogue
+        </a>
+        @if (authService.currentUser()) {
+          <a [routerLink]="lienEspace()"
+             class="bg-bordeaux-900/40 border border-white/30 text-white font-semibold py-2.5 px-5 rounded-md hover:bg-bordeaux-900/60">
+            Mon espace
+          </a>
+        } @else {
+          <a routerLink="/inscription"
+             class="bg-bordeaux-900/40 border border-white/30 text-white font-semibold py-2.5 px-5 rounded-md hover:bg-bordeaux-900/60">
+            Créer un compte
+          </a>
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- Produits en vedette -->
+  <section class="max-w-6xl mx-auto px-4 sm:px-8 py-12 sm:py-16">
+    <div class="flex items-center justify-between mb-6">
+      <h2 class="text-xl sm:text-2xl font-bold text-gray-900">Produits en vedette</h2>
+      <a routerLink="/produits" class="text-sm font-medium text-bordeaux-700 hover:text-bordeaux-800">
+        Voir tout le catalogue →
+      </a>
+    </div>
+
+    @if (chargementProduits()) {
+      <p class="text-gray-500 text-sm">Chargement...</p>
+    } @else if (produitsVedette().length === 0) {
+      <p class="text-gray-500 text-sm">Aucun produit disponible pour le moment.</p>
+    } @else {
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        @for (produit of produitsVedette(); track produit.id) {
+          <a routerLink="/produits" class="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow block">
+            <div class="h-36 bg-gray-100 flex items-center justify-center overflow-hidden">
+              @if (produit.photoUrl) {
+                <img [src]="serverUrl + produit.photoUrl" [alt]="produit.nom" class="w-full h-full object-cover" />
+              } @else {
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25" class="w-10 h-10 text-gray-300">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909M3 21h18a1.5 1.5 0 0 0 1.5-1.5V4.5A1.5 1.5 0 0 0 21 3H3a1.5 1.5 0 0 0-1.5 1.5V19.5A1.5 1.5 0 0 0 3 21z" />
+                </svg>
+              }
+            </div>
+            <div class="p-3">
+              <h3 class="font-semibold text-gray-900 text-sm truncate">{{ produit.nom }}</h3>
+              <p class="text-xs text-gray-500 truncate">{{ produit.producteurNom }}</p>
+              <p class="text-bordeaux-600 font-bold text-sm mt-1">{{ produit.prixUnitaire }} FCFA</p>
+            </div>
+          </a>
+        }
+      </div>
     }
-  </div>
+  </section>
+
+  <!-- Pourquoi BioConversion -->
+  <section class="bg-white border-y border-gray-100">
+    <div class="max-w-6xl mx-auto px-4 sm:px-8 py-12 sm:py-16">
+      <h2 class="text-xl sm:text-2xl font-bold text-gray-900 mb-8 text-center">Pourquoi BioConversion ?</h2>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div class="text-center">
+          <div class="mx-auto w-12 h-12 rounded-full bg-bordeaux-50 flex items-center justify-center mb-3">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-6 h-6 text-bordeaux-600">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+            </svg>
+          </div>
+          <h3 class="font-semibold text-gray-900 mb-1">Producteurs vérifiés</h3>
+          <p class="text-sm text-gray-500">
+            Formation obligatoire et pièce d'identité contrôlée avant toute activation de compte.
+          </p>
+        </div>
+
+        <div class="text-center">
+          <div class="mx-auto w-12 h-12 rounded-full bg-bordeaux-50 flex items-center justify-center mb-3">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-6 h-6 text-bordeaux-600">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z" />
+            </svg>
+          </div>
+          <h3 class="font-semibold text-gray-900 mb-1">Serres connectées</h3>
+          <p class="text-sm text-gray-500">
+            Température, humidité et irrigation suivies en temps réel par des capteurs IoT.
+          </p>
+        </div>
+
+        <div class="text-center">
+          <div class="mx-auto w-12 h-12 rounded-full bg-bordeaux-50 flex items-center justify-center mb-3">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-6 h-6 text-bordeaux-600">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3M4.5 19.5h15a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5h-15A1.5 1.5 0 0 0 3 6v12a1.5 1.5 0 0 0 1.5 1.5Z" />
+            </svg>
+          </div>
+          <h3 class="font-semibold text-gray-900 mb-1">Paiement sécurisé</h3>
+          <p class="text-sm text-gray-500">
+            Mobile Money ou espèces à la livraison, avec facture téléchargeable pour chaque achat.
+          </p>
+        </div>
+
+        <div class="text-center">
+          <div class="mx-auto w-12 h-12 rounded-full bg-bordeaux-50 flex items-center justify-center mb-3">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-6 h-6 text-bordeaux-600">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 18.75a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 0 1-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 0 0-3.213-9.193 2.056 2.056 0 0 0-1.58-.86H14.25M16.5 18.75h-2.25m0-11.25h5.485a2.25 2.25 0 0 1 2.187 1.72l1.24 5.208m0 0H21.5m-3.75 0v-2.25" />
+            </svg>
+          </div>
+          <h3 class="font-semibold text-gray-900 mb-1">Suivi de livraison</h3>
+          <p class="text-sm text-gray-500">
+            Statut de commande en direct, du producteur jusqu'à la livraison chez vous.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <app-footer />
 </div>

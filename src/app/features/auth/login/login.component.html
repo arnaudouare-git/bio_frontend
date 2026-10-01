@@ -1,12 +1,15 @@
 <div class="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-  <div class="w-full max-w-md bg-white rounded-lg shadow p-8">
-    <h1 class="text-2xl font-bold text-gray-900 mb-6">Connexion</h1>
+  <div class="w-full max-w-md bg-white rounded-lg shadow p-6 sm:p-8">
+    <div class="flex flex-col items-center mb-6">
+      <img src="logo.jpeg" alt="BioConversion" class="h-14 w-14 rounded-full object-cover mb-2" />
+      <h1 class="text-2xl font-bold text-gray-900">Connexion</h1>
+    </div>
 
     <form [formGroup]="formulaire" (ngSubmit)="soumettre()" class="space-y-4">
       <div>
         <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
         <input type="email" formControlName="email"
-               class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+               class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-bordeaux-500" />
         @if (formulaire.get('email')?.touched && formulaire.get('email')?.invalid) {
           <p class="text-sm text-red-600 mt-1">Email valide requis.</p>
         }
@@ -15,7 +18,7 @@
       <div>
         <label class="block text-sm font-medium text-gray-700 mb-1">Mot de passe</label>
         <input type="password" formControlName="motDePasse"
-               class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+               class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-bordeaux-500" />
         @if (formulaire.get('motDePasse')?.touched && formulaire.get('motDePasse')?.invalid) {
           <p class="text-sm text-red-600 mt-1">Mot de passe requis.</p>
         }
@@ -26,14 +29,14 @@
       }
 
       <button type="submit" [disabled]="chargement"
-              class="w-full bg-blue-600 text-white font-semibold py-2 rounded-md hover:bg-blue-700 disabled:opacity-50">
+              class="w-full bg-bordeaux-600 text-white font-semibold py-2 rounded-md hover:bg-bordeaux-700 disabled:opacity-50">
         {{ chargement ? 'Connexion...' : 'Se connecter' }}
       </button>
     </form>
 
     <p class="text-sm text-gray-600 mt-4 text-center">
       Pas encore de compte ?
-      <a routerLink="/inscription" class="text-blue-600 font-medium hover:underline">S'inscrire</a>
+      <a routerLink="/inscription" class="text-bordeaux-600 font-medium hover:underline">S'inscrire</a>
     </p>
   </div>
 </div>

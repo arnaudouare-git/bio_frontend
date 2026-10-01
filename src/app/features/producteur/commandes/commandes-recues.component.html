@@ -1,0 +1,96 @@
+<div class="min-h-screen bg-gray-50 p-4 sm:p-8">
+  <div class="max-w-3xl mx-auto">
+    <h1 class="text-2xl font-bold text-gray-900 mb-6">Commandes reçues</h1>
+
+    @if (erreur()) {
+      <p class="text-sm text-red-600 bg-red-50 border border-red-200 rounded-md px-3 py-2 mb-4">
+        {{ erreur() }}
+      </p>
+    }
+
+    @if (chargement()) {
+      <p class="text-gray-500">Chargement...</p>
+    } @else if (commandes().length === 0) {
+      <p class="text-gray-500">Aucune commande ne contient encore l'un de tes produits.</p>
+    } @else {
+      <div class="space-y-4">
+        @for (commande of commandes(); track commande.id) {
+          <div class="bg-white rounded-lg shadow p-5">
+            <div class="flex items-start justify-between mb-3">
+              <div>
+                <p class="font-semibold text-gray-900">Commande #{{ commande.id }} — {{ commande.acheteurNom }}</p>
+                <p class="text-sm text-gray-500">{{ commande.dateCommande | date: 'dd/MM/yyyy HH:mm' }}</p>
+                <p class="text-sm text-gray-500">Livraison : {{ commande.adresseLivraison }}</p>
+              </div>
+              <span class="text-xs font-medium bg-bordeaux-100 text-bordeaux-700 px-2 py-1 rounded h-fit">
+                {{ commande.statut }}
+              </span>
+            </div>
+
+            <div class="border-t border-gray-100 pt-3 space-y-3">
+              @for (ligne of commande.lignes; track ligne.ligneId) {
+                <div class="text-sm" [class.opacity-50]="!estMaLigne(ligne)">
+                  <div class="flex items-center justify-between">
+                    <div>
+                      <span class="text-gray-800">{{ ligne.produitNom }}</span>
+                      <span class="text-gray-500"> × {{ ligne.quantite }}</span>
+                      <span class="ml-2 text-xs font-medium bg-gray-100 text-gray-600 px-2 py-0.5 rounded">
+                        {{ ligne.statut }}
+                      </span>
+                      @if (!estMaLigne(ligne)) {
+                        <span class="ml-2 text-xs text-gray-400">(autre producteur)</span>
+                      }
+                      @if (ligne.motifRefus) {
+                        <p class="text-xs text-red-600 mt-0.5">Motif du refus : {{ ligne.motifRefus }}</p>
+                      }
+                    </div>
+                    <span class="text-gray-700">{{ ligne.sousTotal }} FCFA</span>
+                  </div>
+
+                  @if (estMaLigne(ligne)) {
+                    @if (refusFormulaireOuvert() === ligne.ligneId) {
+                      <div class="mt-2 bg-red-50 border border-red-200 rounded-md p-3 space-y-2">
+                        <textarea
+                          [ngModel]="motifRefusBrouillon[ligne.ligneId]"
+                          (ngModelChange)="motifRefusBrouillon[ligne.ligneId] = $event"
+                          rows="2"
+                          placeholder="Motif du refus (obligatoire)"
+                          class="w-full text-sm border border-gray-300 rounded-md px-2 py-1.5"></textarea>
+                        <div class="flex flex-wrap gap-2">
+                          <button (click)="confirmerRefus(commande, ligne)"
+                                  [disabled]="ligneEnCours() === ligne.ligneId"
+                                  class="text-sm bg-red-600 text-white px-3 py-1.5 rounded-md hover:bg-red-700 disabled:opacity-50">
+                            Confirmer le refus
+                          </button>
+                          <button (click)="fermerFormulaireRefus()" class="text-sm text-gray-600 px-3 py-1.5 hover:underline">
+                            Annuler
+                          </button>
+                        </div>
+                      </div>
+                    } @else {
+                      <div class="mt-2 flex gap-3">
+                        @if (peutAvancer(ligne)) {
+                          <button (click)="avancerLigne(commande, ligne)"
+                                  [disabled]="ligneEnCours() === ligne.ligneId"
+                                  class="text-sm bg-bordeaux-600 text-white px-3 py-1.5 rounded-md hover:bg-bordeaux-700 disabled:opacity-50">
+                            {{ ligneEnCours() === ligne.ligneId ? '...' : 'Faire avancer → ' + prochainStatut(ligne.statut) }}
+                          </button>
+                        }
+                        @if (peutRefuser(ligne)) {
+                          <button (click)="ouvrirFormulaireRefus(ligne.ligneId)"
+                                  class="text-sm text-red-600 font-medium hover:underline">
+                            Refuser
+                          </button>
+                        }
+                      </div>
+                    }
+                  }
+                </div>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </div>
+</div>

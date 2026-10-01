@@ -1,0 +1,41 @@
+<div class="min-h-screen bg-gray-50 p-4 sm:p-8">
+  <div class="max-w-3xl mx-auto">
+    <h1 class="text-2xl font-bold text-gray-900 mb-6">Mes paiements reçus</h1>
+
+    @if (erreur()) {
+      <p class="text-sm text-red-600 bg-red-50 border border-red-200 rounded-md px-3 py-2 mb-4">
+        {{ erreur() }}
+      </p>
+    }
+
+    @if (paiements().length > 0) {
+      <p class="text-gray-700 mb-4">
+        Total net perçu (après commission) : <span class="font-semibold">{{ totalNet() }} FCFA</span>
+      </p>
+    }
+
+    @if (chargement()) {
+      <p class="text-gray-500">Chargement...</p>
+    } @else if (paiements().length === 0) {
+      <p class="text-gray-500">Aucun paiement reçu pour le moment.</p>
+    } @else {
+      <div class="space-y-3">
+        @for (p of paiements(); track p.id) {
+          <div class="bg-white rounded-lg shadow p-4">
+            <div class="flex items-center justify-between mb-1">
+              <p class="font-semibold text-gray-900">Commande #{{ p.commandeId }} — {{ p.methode }}</p>
+              <span class="text-xs font-medium bg-green-100 text-green-700 px-2 py-1 rounded">
+                {{ p.statut }}
+              </span>
+            </div>
+            <p class="text-xs text-gray-400 mb-2">{{ p.datePaiement | date: 'dd/MM/yyyy HH:mm' }}</p>
+            <p class="text-sm text-gray-600">
+              Ma part brute : {{ p.montantBrutProducteur }} FCFA — commission : {{ p.montantCommissionProducteur }} FCFA
+            </p>
+            <p class="text-sm font-medium text-gray-800">Net perçu : {{ p.montantNetProducteur }} FCFA</p>
+          </div>
+        }
+      </div>
+    }
+  </div>
+</div>

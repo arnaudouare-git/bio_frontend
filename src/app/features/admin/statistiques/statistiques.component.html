@@ -1,0 +1,62 @@
+<div class="min-h-screen bg-gray-50 p-4 sm:p-8">
+  <div class="max-w-3xl mx-auto">
+    <h1 class="text-2xl font-bold text-gray-900 mb-6">Statistiques</h1>
+
+    @if (erreur()) {
+      <p class="text-sm text-red-600 bg-red-50 border border-red-200 rounded-md px-3 py-2 mb-4">
+        {{ erreur() }}
+      </p>
+    }
+
+    @if (chargement()) {
+      <p class="text-gray-500">Chargement...</p>
+    } @else if (statistiques(); as s) {
+      <div class="grid sm:grid-cols-2 gap-4">
+        <div class="bg-white rounded-lg shadow p-5">
+          <p class="text-sm text-gray-500">Producteurs</p>
+          <p class="text-2xl font-bold text-gray-900">{{ s.nombreProducteurs }}</p>
+          <p class="text-xs text-gray-400">dont {{ s.nombreProducteursVerifies }} vérifiés</p>
+        </div>
+        <div class="bg-white rounded-lg shadow p-5">
+          <p class="text-sm text-gray-500">Clients</p>
+          <p class="text-2xl font-bold text-gray-900">{{ s.nombreClients }}</p>
+        </div>
+        <div class="bg-white rounded-lg shadow p-5">
+          <p class="text-sm text-gray-500">Commandes</p>
+          <p class="text-2xl font-bold text-gray-900">{{ s.nombreCommandes }}</p>
+          <p class="text-xs text-gray-400">dont {{ s.nombreCommandesLivrees }} livrées</p>
+        </div>
+        <div class="bg-white rounded-lg shadow p-5">
+          <p class="text-sm text-gray-500">Produits publiés</p>
+          <p class="text-2xl font-bold text-gray-900">{{ s.nombreProduitsPublies }}</p>
+        </div>
+        <div class="bg-white rounded-lg shadow p-5">
+          <p class="text-sm text-gray-500">Chiffre d'affaires encaissé</p>
+          <p class="text-2xl font-bold text-gray-900">{{ s.chiffreAffairesTotal }} FCFA</p>
+        </div>
+        <div class="bg-white rounded-lg shadow p-5">
+          <p class="text-sm text-gray-500">Commission plateforme</p>
+          <p class="text-2xl font-bold text-gray-900">{{ s.commissionTotale }} FCFA</p>
+        </div>
+        <div class="bg-white rounded-lg shadow p-5">
+          <p class="text-sm text-gray-500">Formations</p>
+          <p class="text-2xl font-bold text-gray-900">{{ s.nombreFormations }}</p>
+          <p class="text-xs text-gray-400">{{ s.nombreParticipantsFormes }} participation(s)</p>
+        </div>
+        <div class="bg-white rounded-lg shadow p-5">
+          <p class="text-sm text-gray-500">Avis</p>
+          <p class="text-2xl font-bold text-gray-900">{{ s.nombreAvis }}</p>
+          @if (s.noteMoyenne !== null) {
+            <p class="text-xs text-gray-400">note moyenne : {{ s.noteMoyenne }} / 5</p>
+          }
+        </div>
+        <div class="bg-white rounded-lg shadow p-5 sm:col-span-2">
+          <p class="text-sm text-gray-500">Litiges ouverts</p>
+          <p class="text-2xl font-bold" [class.text-orange-600]="s.nombreLitigesOuverts > 0" [class.text-gray-900]="s.nombreLitigesOuverts === 0">
+            {{ s.nombreLitigesOuverts }}
+          </p>
+        </div>
+      </div>
+    }
+  </div>
+</div>

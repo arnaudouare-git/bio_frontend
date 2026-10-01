@@ -1,0 +1,69 @@
+<div class="min-h-screen bg-gray-50 p-4 sm:p-8">
+  <div class="max-w-3xl mx-auto">
+    <h1 class="text-2xl font-bold text-gray-900 mb-6">Espace Producteur</h1>
+
+    @if (authService.currentUser(); as utilisateur) {
+      <p class="text-gray-600 mb-6">
+        Bienvenue {{ utilisateur.prenom }} {{ utilisateur.nom }} — statut de vérification :
+        {{ utilisateur.statutVerificationCnib }}
+      </p>
+    }
+
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <div class="bg-white rounded-lg shadow p-4">
+        <p class="text-sm text-gray-500 mb-1">Produits publiés</p>
+        <p class="text-2xl font-bold text-gray-900">{{ chargementKpi() ? '…' : nombreProduits() }}</p>
+      </div>
+      <div class="bg-white rounded-lg shadow p-4">
+        <p class="text-sm text-gray-500 mb-1">En rupture de stock</p>
+        <p class="text-2xl font-bold" [class]="nombreEnRupture() > 0 ? 'text-red-600' : 'text-gray-900'">
+          {{ chargementKpi() ? '…' : nombreEnRupture() }}
+        </p>
+      </div>
+      <div class="bg-white rounded-lg shadow p-4">
+        <p class="text-sm text-gray-500 mb-1">Lignes en attente</p>
+        <p class="text-2xl font-bold" [class]="nombreLignesEnAttente() > 0 ? 'text-amber-600' : 'text-gray-900'">
+          {{ chargementKpi() ? '…' : nombreLignesEnAttente() }}
+        </p>
+      </div>
+      <div class="bg-white rounded-lg shadow p-4">
+        <p class="text-sm text-gray-500 mb-1">Revenu net</p>
+        <p class="text-2xl font-bold text-green-700">
+          {{ chargementKpi() ? '…' : (revenuNet() + ' FCFA') }}
+        </p>
+      </div>
+    </div>
+
+    <div class="grid sm:grid-cols-2 gap-4">
+      <a routerLink="/producteur/produits"
+         class="bg-white rounded-lg shadow p-5 hover:shadow-md transition-shadow">
+        <p class="font-semibold text-gray-900 mb-1">Mes produits</p>
+        <p class="text-sm text-gray-500">Publier, modifier ou retirer mes produits du catalogue.</p>
+      </a>
+
+      <a routerLink="/producteur/commandes"
+         class="bg-white rounded-lg shadow p-5 hover:shadow-md transition-shadow">
+        <p class="font-semibold text-gray-900 mb-1">Commandes reçues</p>
+        <p class="text-sm text-gray-500">Accepter, faire avancer ou refuser mes lignes de commande.</p>
+      </a>
+
+      <a routerLink="/producteur/serres"
+         class="bg-white rounded-lg shadow p-5 hover:shadow-md transition-shadow">
+        <p class="font-semibold text-gray-900 mb-1">Mes serres (IoT)</p>
+        <p class="text-sm text-gray-500">Capteurs, mesures, alertes et irrigation automatique.</p>
+      </a>
+
+      <a routerLink="/producteur/avis"
+         class="bg-white rounded-lg shadow p-5 hover:shadow-md transition-shadow">
+        <p class="font-semibold text-gray-900 mb-1">Mes avis reçus</p>
+        <p class="text-sm text-gray-500">Voir les notes et commentaires laissés par mes clients.</p>
+      </a>
+
+      <a routerLink="/producteur/paiements"
+         class="bg-white rounded-lg shadow p-5 hover:shadow-md transition-shadow sm:col-span-2">
+        <p class="font-semibold text-gray-900 mb-1">Mes paiements reçus</p>
+        <p class="text-sm text-gray-500">Revenus encaissés, part nette après commission plateforme.</p>
+      </a>
+    </div>
+  </div>
+</div>

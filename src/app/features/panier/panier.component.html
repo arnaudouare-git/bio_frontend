@@ -1,0 +1,92 @@
+<div class="min-h-screen bg-gray-50 p-4 sm:p-8">
+  <div class="max-w-4xl mx-auto">
+    <h1 class="text-2xl font-bold text-gray-900 mb-6">Mon panier</h1>
+
+    @if (panierService.lignes().length === 0) {
+      <div class="bg-white rounded-lg shadow p-8 text-center">
+        <p class="text-gray-500 mb-4">Ton panier est vide.</p>
+        <a routerLink="/produits" class="inline-block bg-bordeaux-600 text-white text-sm font-semibold py-2 px-4 rounded-md hover:bg-bordeaux-700">
+          Voir le catalogue
+        </a>
+      </div>
+    } @else {
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Liste des articles -->
+        <div class="lg:col-span-2 bg-white rounded-lg shadow divide-y divide-gray-100">
+          @for (ligne of panierService.lignes(); track ligne.produit.id) {
+            <div class="p-4 flex items-center gap-4">
+              <div class="w-16 h-16 rounded-md bg-gray-100 flex items-center justify-center overflow-hidden shrink-0">
+                @if (ligne.produit.photoUrl) {
+                  <img [src]="serverUrl + ligne.produit.photoUrl" [alt]="ligne.produit.nom" class="w-full h-full object-cover" />
+                } @else {
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25" class="w-6 h-6 text-gray-300">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909M3 21h18a1.5 1.5 0 0 0 1.5-1.5V4.5A1.5 1.5 0 0 0 21 3H3a1.5 1.5 0 0 0-1.5 1.5V19.5A1.5 1.5 0 0 0 3 21z" />
+                  </svg>
+                }
+              </div>
+
+              <div class="flex-1 min-w-0">
+                <p class="font-semibold text-gray-900 truncate">{{ ligne.produit.nom }}</p>
+                <p class="text-sm text-gray-500">{{ ligne.produit.producteurNom }}</p>
+                <p class="text-sm font-medium text-bordeaux-600">{{ ligne.produit.prixUnitaire }} FCFA / unité</p>
+              </div>
+
+              <input type="number" min="1" [max]="ligne.produit.stock" [ngModel]="ligne.quantite"
+                     (change)="modifierQuantite(ligne.produit.id, $event)"
+                     class="w-16 border border-gray-300 rounded-md px-2 py-1.5 text-sm text-center" />
+
+              <p class="w-24 text-right font-semibold text-gray-900 shrink-0">
+                {{ ligne.produit.prixUnitaire * ligne.quantite }} FCFA
+              </p>
+
+              <button (click)="retirer(ligne.produit.id)" class="text-gray-400 hover:text-red-600 shrink-0" aria-label="Retirer">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-5 h-5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+                </svg>
+              </button>
+            </div>
+          }
+        </div>
+
+        <!-- Résumé + checkout -->
+        <div class="bg-white rounded-lg shadow p-4 h-fit">
+          <h2 class="font-semibold text-gray-900 mb-3">Résumé</h2>
+
+          <div class="flex items-center justify-between text-sm mb-1">
+            <span class="text-gray-500">Sous-total ({{ panierService.nombreArticles() }} article(s))</span>
+            <span class="text-gray-900 font-medium">{{ panierService.montantTotal() }} FCFA</span>
+          </div>
+          <div class="flex items-center justify-between text-sm mb-4 pb-4 border-b border-gray-100">
+            <span class="text-gray-500">Livraison</span>
+            <span class="text-gray-900 font-medium">À la charge du producteur</span>
+          </div>
+          <div class="flex items-center justify-between font-bold text-gray-900 mb-4">
+            <span>Total</span>
+            <span>{{ panierService.montantTotal() }} FCFA</span>
+          </div>
+
+          <label class="block text-sm font-medium text-gray-700 mb-1">Adresse de livraison</label>
+          <input type="text" [(ngModel)]="adresseLivraison" placeholder="Ex : Secteur 15, Ouagadougou"
+                 class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm mb-3 focus:outline-none focus:ring-2 focus:ring-bordeaux-500" />
+
+          @if (erreur()) {
+            <p class="text-sm text-red-600 bg-red-50 border border-red-200 rounded-md px-3 py-2 mb-3">
+              {{ erreur() }}
+            </p>
+          }
+
+          @if (!authService.estConnecte()) {
+            <p class="text-xs text-gray-500 mb-3">
+              Tu dois être connecté pour passer commande — ton panier est conservé.
+            </p>
+          }
+
+          <button (click)="passerCommande()" [disabled]="enCours()"
+                  class="w-full bg-bordeaux-600 text-white font-semibold py-2.5 rounded-md hover:bg-bordeaux-700 disabled:opacity-50">
+            {{ enCours() ? 'Envoi...' : (authService.estConnecte() ? 'Passer la commande' : 'Se connecter pour commander') }}
+          </button>
+        </div>
+      </div>
+    }
+  </div>
+</div>

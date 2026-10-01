@@ -1,0 +1,204 @@
+<div class="min-h-screen bg-gray-50 p-4 sm:p-8">
+  <div class="max-w-3xl mx-auto">
+    <h1 class="text-2xl font-bold text-gray-900 mb-6">Mes commandes</h1>
+
+    @if (erreur()) {
+      <p class="text-sm text-red-600 bg-red-50 border border-red-200 rounded-md px-3 py-2 mb-4">
+        {{ erreur() }}
+      </p>
+    }
+
+    @if (chargement()) {
+      <p class="text-gray-500">Chargement...</p>
+    } @else if (commandes().length === 0) {
+      <p class="text-gray-500">Tu n'as pas encore passé de commande.</p>
+    } @else {
+      <div class="space-y-4">
+        @for (commande of commandes(); track commande.id) {
+          <div class="bg-white rounded-lg shadow p-5">
+            <div class="flex items-start justify-between mb-3">
+              <div>
+                <p class="font-semibold text-gray-900">Commande #{{ commande.id }}</p>
+                <p class="text-sm text-gray-500">{{ commande.dateCommande | date: 'dd/MM/yyyy HH:mm' }}</p>
+                <p class="text-sm text-gray-500">Livraison : {{ commande.adresseLivraison }}</p>
+              </div>
+              <div class="flex flex-col items-end gap-1">
+                <span class="text-xs font-medium bg-bordeaux-100 text-bordeaux-700 px-2 py-1 rounded h-fit">
+                  {{ commande.statut }}
+                </span>
+                <a [routerLink]="['/commandes', commande.id]" class="text-xs text-bordeaux-600 hover:underline">
+                  Voir le suivi
+                </a>
+              </div>
+            </div>
+
+            <div class="border-t border-gray-100 pt-3 space-y-2">
+              @for (ligne of commande.lignes; track ligne.ligneId) {
+                <div class="flex items-center justify-between text-sm">
+                  <div>
+                    <span class="text-gray-800">{{ ligne.produitNom }}</span>
+                    <span class="text-gray-500"> × {{ ligne.quantite }}</span>
+                    <span class="ml-2 text-xs font-medium bg-gray-100 text-gray-600 px-2 py-0.5 rounded">
+                      {{ ligne.statut }}
+                    </span>
+                    @if (ligne.motifRefus) {
+                      <p class="text-xs text-red-600 mt-0.5">Motif du refus : {{ ligne.motifRefus }}</p>
+                    }
+                  </div>
+                  <span class="text-gray-700">{{ ligne.sousTotal }} FCFA</span>
+                </div>
+              }
+            </div>
+
+            <div class="border-t border-gray-100 mt-3 pt-3 flex items-center justify-between">
+              <p class="font-semibold text-gray-900">Total : {{ commande.montantTotal }} FCFA</p>
+              @if (peutAnnuler(commande)) {
+                <button (click)="annuler(commande)"
+                        [disabled]="annulationEnCours() === commande.id"
+                        class="text-sm text-red-600 font-medium hover:underline disabled:opacity-50">
+                  {{ annulationEnCours() === commande.id ? 'Annulation...' : 'Annuler' }}
+                </button>
+              }
+            </div>
+
+            <!-- Paiement -->
+            <div class="border-t border-gray-100 mt-3 pt-3">
+              @if (paiementReussi(commande); as paye) {
+                <div class="flex items-center justify-between">
+                  <p class="text-sm text-green-700 font-medium">
+                    Payé ({{ paye.methode }}) — réf. {{ paye.referenceTransaction || '—' }}
+                  </p>
+                  <button (click)="telechargerFacture(paye)"
+                          [disabled]="telechargementEnCours() === paye.id"
+                          class="text-sm text-bordeaux-600 font-medium hover:underline disabled:opacity-50">
+                    {{ telechargementEnCours() === paye.id ? 'Téléchargement...' : 'Télécharger la facture' }}
+                  </button>
+                </div>
+              } @else if (paiementEnAttente(commande); as attente) {
+                <div class="bg-yellow-50 border border-yellow-200 rounded-md p-3">
+                  <p class="text-sm text-yellow-800 mb-2">
+                    Paiement en attente ({{ attente.methode }}) — réf. {{ attente.referenceTransaction || '—' }}.
+                    En attendant une vraie intégration Orange Money, simule le retour de l'opérateur :
+                  </p>
+                  <div class="flex flex-wrap gap-2">
+                    <button (click)="simulerConfirmation(attente, true)"
+                            [disabled]="paiementEnCours() === commande.id"
+                            class="text-sm bg-bordeaux-600 text-white px-3 py-1.5 rounded-md hover:bg-bordeaux-700 disabled:opacity-50">
+                      Simuler succès
+                    </button>
+                    <button (click)="simulerConfirmation(attente, false)"
+                            [disabled]="paiementEnCours() === commande.id"
+                            class="text-sm bg-red-600 text-white px-3 py-1.5 rounded-md hover:bg-red-700 disabled:opacity-50">
+                      Simuler échec
+                    </button>
+                  </div>
+                </div>
+              } @else if (peutPayer(commande)) {
+                <div class="flex items-center gap-2">
+                  <select (change)="definirMethode(commande.id, $any($event.target).value)"
+                          class="text-sm border border-gray-300 rounded-md px-2 py-1.5">
+                    <option value="ORANGE_MONEY">Orange Money</option>
+                    <option value="CASH">Paiement à la livraison (cash)</option>
+                  </select>
+                  <button (click)="initierPaiement(commande)"
+                          [disabled]="paiementEnCours() === commande.id"
+                          class="text-sm bg-bordeaux-600 text-white px-3 py-1.5 rounded-md hover:bg-bordeaux-700 disabled:opacity-50">
+                    {{ paiementEnCours() === commande.id ? 'Initialisation...' : 'Payer' }}
+                  </button>
+                </div>
+              }
+            </div>
+
+            <!-- Avis (un par producteur livré dans cette commande) -->
+            @if (producteursLivres(commande).length > 0) {
+              <div class="border-t border-gray-100 mt-3 pt-3 space-y-2">
+                @for (producteur of producteursLivres(commande); track producteur.producteurId) {
+                  @if (avisDejaEnvoye(commande.id, producteur.producteurId)) {
+                    <p class="text-sm text-green-700">
+                      ✓ Avis envoyé pour {{ producteur.producteurNom }}
+                    </p>
+                  } @else if (avisFormulaireOuvert() === commande.id + ':' + producteur.producteurId) {
+                    <div class="bg-bordeaux-50 border border-bordeaux-200 rounded-md p-3 space-y-2">
+                      <p class="text-sm font-medium text-gray-800">Avis pour {{ producteur.producteurNom }}</p>
+                      <div class="flex items-center gap-2">
+                        <label class="text-sm text-gray-600">Note :</label>
+                        <select
+                          [ngModel]="brouillonAvis(commande.id, producteur.producteurId).note"
+                          (ngModelChange)="brouillonAvis(commande.id, producteur.producteurId).note = $event"
+                          class="text-sm border border-gray-300 rounded-md px-2 py-1">
+                          <option [ngValue]="5">5 - Excellent</option>
+                          <option [ngValue]="4">4 - Bien</option>
+                          <option [ngValue]="3">3 - Correct</option>
+                          <option [ngValue]="2">2 - Décevant</option>
+                          <option [ngValue]="1">1 - Mauvais</option>
+                        </select>
+                      </div>
+                      <textarea
+                        [ngModel]="brouillonAvis(commande.id, producteur.producteurId).commentaire"
+                        (ngModelChange)="brouillonAvis(commande.id, producteur.producteurId).commentaire = $event"
+                        rows="2"
+                        placeholder="Commentaire (optionnel)"
+                        class="w-full text-sm border border-gray-300 rounded-md px-2 py-1.5"></textarea>
+                      <div class="flex flex-wrap gap-2">
+                        <button (click)="envoyerAvis(commande, producteur.producteurId)"
+                                [disabled]="avisEnCours() === commande.id + ':' + producteur.producteurId"
+                                class="text-sm bg-bordeaux-600 text-white px-3 py-1.5 rounded-md hover:bg-bordeaux-700 disabled:opacity-50">
+                          {{ avisEnCours() === commande.id + ':' + producteur.producteurId ? 'Envoi...' : 'Envoyer' }}
+                        </button>
+                        <button (click)="fermerFormulaireAvis()"
+                                class="text-sm text-gray-600 px-3 py-1.5 hover:underline">
+                          Annuler
+                        </button>
+                      </div>
+                    </div>
+                  } @else {
+                    <button (click)="ouvrirFormulaireAvis(commande.id, producteur.producteurId)"
+                            class="text-sm text-bordeaux-600 font-medium hover:underline">
+                      Laisser un avis pour {{ producteur.producteurNom }}
+                    </button>
+                  }
+                }
+              </div>
+            }
+
+            <!-- Litige -->
+            <div class="border-t border-gray-100 mt-3 pt-3">
+              @if (litigeOuvert(commande); as litige) {
+                <div class="bg-orange-50 border border-orange-200 rounded-md p-3">
+                  <p class="text-sm text-orange-800 font-medium">Litige ouvert</p>
+                  <p class="text-sm text-orange-700 mt-1">{{ litige.motif }}</p>
+                </div>
+              } @else if (litigeFormulaireOuvert() === commande.id) {
+                <div class="bg-orange-50 border border-orange-200 rounded-md p-3 space-y-2">
+                  <p class="text-sm font-medium text-gray-800">Signaler un problème sur cette commande</p>
+                  <textarea
+                    [ngModel]="motifLitigeBrouillon[commande.id]"
+                    (ngModelChange)="motifLitigeBrouillon[commande.id] = $event"
+                    rows="2"
+                    placeholder="Décris le problème (ex : payée depuis 5 jours, jamais livrée)"
+                    class="w-full text-sm border border-gray-300 rounded-md px-2 py-1.5"></textarea>
+                  <div class="flex flex-wrap gap-2">
+                    <button (click)="envoyerLitige(commande)"
+                            [disabled]="litigeEnCours() === commande.id"
+                            class="text-sm bg-orange-600 text-white px-3 py-1.5 rounded-md hover:bg-orange-700 disabled:opacity-50">
+                      {{ litigeEnCours() === commande.id ? 'Envoi...' : 'Envoyer le signalement' }}
+                    </button>
+                    <button (click)="fermerFormulaireLitige()"
+                            class="text-sm text-gray-600 px-3 py-1.5 hover:underline">
+                      Annuler
+                    </button>
+                  </div>
+                </div>
+              } @else if (peutOuvrirLitige(commande)) {
+                <button (click)="ouvrirFormulaireLitige(commande.id)"
+                        class="text-sm text-orange-600 font-medium hover:underline">
+                  Signaler un problème (commande payée non livrée)
+                </button>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </div>
+</div>

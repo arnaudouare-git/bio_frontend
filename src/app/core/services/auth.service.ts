@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { Observable, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { AuthResponse, LoginRequest, RegisterRequest } from '../models/auth.model';
+import { PanierService } from './panier.service';
 
 const TOKEN_KEY = 'bioconversion_token';
 const USER_KEY = 'bioconversion_user';
@@ -12,7 +13,7 @@ const USER_KEY = 'bioconversion_user';
 export class AuthService {
   currentUser = signal<AuthResponse | null>(this.lireUtilisateurStocke());
 
-  constructor(private http: HttpClient, private router: Router) {}
+  constructor(private http: HttpClient, private router: Router, private panierService: PanierService) {}
 
   inscrire(payload: RegisterRequest): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(`${environment.apiUrl}/auth/inscription`, payload)
@@ -28,6 +29,11 @@ export class AuthService {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
     this.currentUser.set(null);
+    // Vide le panier a la deconnexion (module ajoute le 2026-09-29) : le
+    // panier n'est pas rattache a un compte, mieux vaut repartir propre
+    // plutot que de risquer qu'un autre utilisateur du meme navigateur
+    // commande les articles laisses par le precedent.
+    this.panierService.vider();
     this.router.navigate(['/connexion']);
   }
 

@@ -1,0 +1,126 @@
+<div class="min-h-screen bg-gray-50 p-4 sm:p-8">
+  <div class="max-w-5xl mx-auto">
+    <h1 class="text-2xl font-bold text-gray-900 mb-2">Espace Administrateur</h1>
+
+    @if (authService.currentUser(); as utilisateur) {
+      <p class="text-gray-600 mb-6">Bienvenue {{ utilisateur.prenom }} {{ utilisateur.nom }}</p>
+    }
+
+    <!-- KPI cards -->
+    @if (chargementTendances()) {
+      <p class="text-gray-500 mb-6">Chargement des statistiques...</p>
+    } @else if (tendances(); as t) {
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+        <div class="bg-white rounded-lg shadow p-5">
+          <p class="text-sm text-gray-500">Commandes (7 jours)</p>
+          <p class="text-2xl font-bold text-gray-900">{{ t.commandes7Jours }}</p>
+          @if (t.variationCommandesPct !== null) {
+            <p class="text-xs mt-1" [class.text-green-600]="t.variationCommandesPct >= 0" [class.text-red-600]="t.variationCommandesPct < 0">
+              {{ formatVariation(t.variationCommandesPct) }} vs 7 jours precedents
+            </p>
+          }
+        </div>
+        <div class="bg-white rounded-lg shadow p-5">
+          <p class="text-sm text-gray-500">Revenus (7 jours)</p>
+          <p class="text-2xl font-bold text-gray-900">{{ t.revenus7Jours }} FCFA</p>
+          @if (t.variationRevenusPct !== null) {
+            <p class="text-xs mt-1" [class.text-green-600]="t.variationRevenusPct >= 0" [class.text-red-600]="t.variationRevenusPct < 0">
+              {{ formatVariation(t.variationRevenusPct) }} vs 7 jours precedents
+            </p>
+          }
+        </div>
+        <div class="bg-white rounded-lg shadow p-5">
+          <p class="text-sm text-gray-500">Producteurs formes ce mois</p>
+          <p class="text-2xl font-bold text-gray-900">{{ t.producteursFormesCeMois }}</p>
+          @if (t.variationProducteursFormesCeMois !== null) {
+            <p class="text-xs mt-1" [class.text-green-600]="t.variationProducteursFormesCeMois >= 0" [class.text-red-600]="t.variationProducteursFormesCeMois < 0">
+              {{ t.variationProducteursFormesCeMois >= 0 ? '+' : '' }}{{ t.variationProducteursFormesCeMois }} vs mois precedent
+            </p>
+          }
+        </div>
+      </div>
+
+      <!-- Graphique en barres -->
+      <div class="bg-white rounded-lg shadow p-5 mb-6">
+        <p class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">Revenus des 7 derniers jours</p>
+        @if (barresRevenus().length === 0) {
+          <p class="text-gray-500 text-sm">Aucune donnee sur cette periode.</p>
+        } @else {
+          <div class="flex items-end gap-3 h-40">
+            @for (jour of barresRevenus(); track jour.date) {
+              <div class="flex-1 flex flex-col items-center gap-1">
+                <div class="w-full bg-bordeaux-100 rounded-t-md flex items-end" style="height: 100%;">
+                  <div class="w-full bg-bordeaux-600 rounded-t-md" [style.height.%]="jour.hauteurPct"></div>
+                </div>
+                <span class="text-[10px] text-gray-500">{{ formatDateCourte(jour.date) }}</span>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    }
+
+    <!-- Dernieres commandes -->
+    <div class="bg-white rounded-lg shadow p-5 mb-6 overflow-x-auto">
+      <p class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">Dernieres commandes</p>
+      @if (chargementCommandes()) {
+        <p class="text-gray-500 text-sm">Chargement...</p>
+      } @else if (dernieresCommandes().length === 0) {
+        <p class="text-gray-500 text-sm">Aucune commande pour le moment.</p>
+      } @else {
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="text-left text-gray-500 border-b border-gray-100">
+              <th class="pb-2 font-medium">#</th>
+              <th class="pb-2 font-medium">Date</th>
+              <th class="pb-2 font-medium">Acheteur</th>
+              <th class="pb-2 font-medium">Statut</th>
+              <th class="pb-2 font-medium text-right">Montant</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (commande of dernieresCommandes(); track commande.id) {
+              <tr class="border-b border-gray-50 last:border-0">
+                <td class="py-2 text-gray-700">#{{ commande.id }}</td>
+                <td class="py-2 text-gray-700">{{ commande.dateCommande | date: 'dd/MM/yy HH:mm' }}</td>
+                <td class="py-2 text-gray-700">{{ commande.acheteurNom }}</td>
+                <td class="py-2">
+                  <span class="text-xs font-medium bg-bordeaux-100 text-bordeaux-700 px-2 py-0.5 rounded">
+                    {{ commande.statut }}
+                  </span>
+                </td>
+                <td class="py-2 text-gray-700 text-right">{{ commande.montantTotal }} FCFA</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    </div>
+
+    <div class="grid sm:grid-cols-2 gap-4">
+      <a routerLink="/admin/comptes"
+         class="bg-white rounded-lg shadow p-5 hover:shadow-md transition-shadow">
+        <p class="font-semibold text-gray-900 mb-1">Comptes</p>
+        <p class="text-sm text-gray-500">Activer les Producteurs, suspendre ou reactiver n'importe quel compte.</p>
+      </a>
+
+      <a routerLink="/admin/formations"
+         class="bg-white rounded-lg shadow p-5 hover:shadow-md transition-shadow">
+        <p class="font-semibold text-gray-900 mb-1">Formations</p>
+        <p class="text-sm text-gray-500">Creer des sessions, inscrire des producteurs, suivre la tracabilite.</p>
+      </a>
+
+      <a routerLink="/admin/litiges"
+         class="bg-white rounded-lg shadow p-5 hover:shadow-md transition-shadow">
+        <p class="font-semibold text-gray-900 mb-1">Litiges</p>
+        <p class="text-sm text-gray-500">Arbitrer les litiges ouverts par les clients.</p>
+      </a>
+
+      <a routerLink="/admin/statistiques"
+         class="bg-white rounded-lg shadow p-5 hover:shadow-md transition-shadow">
+        <p class="font-semibold text-gray-900 mb-1">Statistiques</p>
+        <p class="text-sm text-gray-500">Vue d'ensemble de la plateforme (chiffre d'affaires, commission, avis...).</p>
+      </a>
+    </div>
+  </div>
+</div>

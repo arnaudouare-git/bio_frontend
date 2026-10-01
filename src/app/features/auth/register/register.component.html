@@ -1,37 +1,40 @@
 <div class="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-8">
-  <div class="w-full max-w-md bg-white rounded-lg shadow p-8">
-    <h1 class="text-2xl font-bold text-gray-900 mb-6">Créer un compte</h1>
+  <div class="w-full max-w-md bg-white rounded-lg shadow p-6 sm:p-8">
+    <div class="flex flex-col items-center mb-6">
+      <img src="logo.jpeg" alt="BioConversion" class="h-14 w-14 rounded-full object-cover mb-2" />
+      <h1 class="text-2xl font-bold text-gray-900">Créer un compte</h1>
+    </div>
 
     <form [formGroup]="formulaire" (ngSubmit)="soumettre()" class="space-y-4">
-      <div class="grid grid-cols-2 gap-4">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">Nom</label>
           <input type="text" formControlName="nom"
-                 class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                 class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-bordeaux-500" />
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">Prénom</label>
           <input type="text" formControlName="prenom"
-                 class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                 class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-bordeaux-500" />
         </div>
       </div>
 
       <div>
         <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
         <input type="email" formControlName="email"
-               class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+               class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-bordeaux-500" />
       </div>
 
       <div>
         <label class="block text-sm font-medium text-gray-700 mb-1">Téléphone</label>
         <input type="tel" formControlName="telephone"
-               class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+               class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-bordeaux-500" />
       </div>
 
       <div>
         <label class="block text-sm font-medium text-gray-700 mb-1">Mot de passe</label>
         <input type="password" formControlName="motDePasse"
-               class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+               class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-bordeaux-500" />
         @if (formulaire.get('motDePasse')?.touched && formulaire.get('motDePasse')?.invalid) {
           <p class="text-sm text-red-600 mt-1">6 caractères minimum.</p>
         }
@@ -40,7 +43,7 @@
       <div>
         <label class="block text-sm font-medium text-gray-700 mb-1">Je m'inscris en tant que</label>
         <select formControlName="role"
-                class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-bordeaux-500">
           <option value="CLIENT">Client (j'achète des larves)</option>
           <option value="PRODUCTEUR">Producteur (je vends et j'achète)</option>
         </select>
@@ -52,7 +55,7 @@
             Référence pièce d'identité (CNIB)
           </label>
           <input type="text" formControlName="documentIdentiteRef"
-                 class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                 class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-bordeaux-500" />
           <p class="text-xs text-gray-500 mt-1">
             Obligatoire pour un Producteur — votre compte restera en attente jusqu'à vérification par un administrateur.
           </p>
@@ -64,14 +67,14 @@
       }
 
       <button type="submit" [disabled]="chargement"
-              class="w-full bg-blue-600 text-white font-semibold py-2 rounded-md hover:bg-blue-700 disabled:opacity-50">
+              class="w-full bg-bordeaux-600 text-white font-semibold py-2 rounded-md hover:bg-bordeaux-700 disabled:opacity-50">
         {{ chargement ? 'Création...' : 'Créer mon compte' }}
       </button>
     </form>
 
     <p class="text-sm text-gray-600 mt-4 text-center">
       Déjà un compte ?
-      <a routerLink="/connexion" class="text-blue-600 font-medium hover:underline">Se connecter</a>
+      <a routerLink="/connexion" class="text-bordeaux-600 font-medium hover:underline">Se connecter</a>
     </p>
   </div>
 </div>

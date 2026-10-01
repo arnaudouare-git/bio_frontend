@@ -1,1 +1,20 @@
-@import "tailwindcss";/* You can add global styles to this file, and also import other style files */
+@import "tailwindcss";
+
+/* Palette de marque "bordeaux" (choisie par le client, 2026-09-29) --
+   remplace l'ancien vert emerald comme couleur d'accent principale.
+   Genere une echelle 50-950 utilisable comme n'importe quelle couleur
+   Tailwind native : bg-bordeaux-600, text-bordeaux-700, focus:ring-bordeaux-500... */
+@theme {
+  --color-bordeaux-50: #FCF3F5;
+  --color-bordeaux-100: #F8E2E8;
+  --color-bordeaux-200: #F0C1CD;
+  --color-bordeaux-300: #E58FA5;
+  --color-bordeaux-400: #D45474;
+  --color-bordeaux-500: #B9274C;
+  --color-bordeaux-600: #981B3A;
+  --color-bordeaux-700: #7B142E;
+  --color-bordeaux-800: #5F1124;
+  --color-bordeaux-900: #490E1D;
+  --color-bordeaux-950: #2B0811;
+}
+/* You can add global styles to this file, and also import other style files */

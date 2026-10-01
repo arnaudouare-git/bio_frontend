@@ -1,0 +1,218 @@
+<div class="min-h-screen bg-gray-50 p-4 sm:p-8">
+  <div class="max-w-3xl mx-auto">
+    <h1 class="text-2xl font-bold text-gray-900 mb-6">{{ serre()?.nom ?? 'Serre' }}</h1>
+
+    @if (erreur()) {
+      <p class="text-sm text-red-600 bg-red-50 border border-red-200 rounded-md px-3 py-2 mb-4">
+        {{ erreur() }}
+      </p>
+    }
+
+    @if (chargement()) {
+      <p class="text-gray-500">Chargement...</p>
+    } @else if (serre(); as s) {
+      <p class="text-sm text-gray-500 mb-6">
+        {{ s.localisation }} — Capacité max : {{ s.capaciteMax }}
+      </p>
+
+      <!-- Alertes non traitées -->
+      @if (dashboard(); as d) {
+        @if (d.alertesNonTraitees.length > 0) {
+          <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-4 space-y-2">
+            <p class="font-semibold text-red-800">Alertes non traitées</p>
+            @for (alerte of d.alertesNonTraitees; track alerte.id) {
+              <div class="flex items-center justify-between text-sm">
+                <span class="text-red-700">
+                  {{ alerte.type }} — seuil {{ alerte.seuil }} — {{ alerte.dateAlerte | date: 'dd/MM/yyyy HH:mm' }}
+                </span>
+                <button (click)="traiterAlerte(alerte.id)" [disabled]="alerteEnCours() === alerte.id"
+                        class="text-sm bg-red-600 text-white px-2 py-1 rounded-md hover:bg-red-700 disabled:opacity-50">
+                  {{ alerteEnCours() === alerte.id ? '...' : 'Traiter' }}
+                </button>
+              </div>
+            }
+          </div>
+        }
+
+        <!-- Etat temps reel des capteurs -->
+        <div class="bg-white rounded-lg shadow p-5 mb-4">
+          <p class="font-semibold text-gray-900 mb-3">État temps réel</p>
+          @if (d.capteurs.length === 0) {
+            <p class="text-sm text-gray-500">Aucun capteur installé pour le moment.</p>
+          } @else {
+            <div class="space-y-2">
+              @for (etat of d.capteurs; track etat.capteurId) {
+                <div class="flex items-center justify-between text-sm border-b border-gray-100 pb-2">
+                  <span class="text-gray-700">
+                    Capteur #{{ etat.capteurId }} ({{ etat.type }})
+                    @if (etat.silencieux) {
+                      <span class="ml-2 text-xs font-medium bg-gray-200 text-gray-600 px-2 py-0.5 rounded">
+                        silencieux
+                      </span>
+                    }
+                  </span>
+                  <span class="text-gray-600">
+                    @if (etat.derniereTemperature !== null) { {{ etat.derniereTemperature }}°C }
+                    @if (etat.derniereHumidite !== null) { — {{ etat.derniereHumidite }}% hum. }
+                  </span>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      }
+
+      <!-- Actionneurs -->
+      @if (actionneurs().length > 0) {
+        <div class="bg-white rounded-lg shadow p-5 mb-4">
+          <p class="font-semibold text-gray-900 mb-3">Actionneurs</p>
+          @for (actionneur of actionneurs(); track actionneur.id) {
+            <div class="flex items-center justify-between text-sm">
+              <span class="text-gray-700">
+                {{ actionneur.type }} —
+                <span [class.text-green-600]="actionneur.etat === 'ACTIF'" [class.text-gray-500]="actionneur.etat !== 'ACTIF'">
+                  {{ actionneur.etat }}
+                </span>
+              </span>
+              <div class="flex flex-wrap gap-2">
+                <button (click)="changerEtatActionneur(actionneur, 'ACTIF')"
+                        [disabled]="actionneurEnCours() === actionneur.id || actionneur.etat === 'ACTIF'"
+                        class="text-sm bg-bordeaux-600 text-white px-2 py-1 rounded-md hover:bg-bordeaux-700 disabled:opacity-50">
+                  Activer
+                </button>
+                <button (click)="changerEtatActionneur(actionneur, 'INACTIF')"
+                        [disabled]="actionneurEnCours() === actionneur.id || actionneur.etat === 'INACTIF'"
+                        class="text-sm bg-gray-600 text-white px-2 py-1 rounded-md hover:bg-gray-700 disabled:opacity-50">
+                  Désactiver
+                </button>
+              </div>
+            </div>
+          }
+          <p class="text-xs text-gray-400 mt-2">
+            Le pilotage manuel peut être écrasé par la prochaine mesure automatique (irrigation pilotée par l'humidité).
+          </p>
+        </div>
+      }
+
+      <!-- Capteurs : liste + simulation de mesures -->
+      <div class="bg-white rounded-lg shadow p-5">
+        <div class="flex items-center justify-between mb-3">
+          <p class="font-semibold text-gray-900">Capteurs</p>
+          @if (!formulaireCapteurOuvert()) {
+            <button (click)="ouvrirFormulaireCapteur()" class="text-sm text-bordeaux-600 font-medium hover:underline">
+              + Installer un capteur
+            </button>
+          }
+        </div>
+
+        @if (formulaireCapteurOuvert()) {
+          <div class="bg-bordeaux-50 border border-bordeaux-200 rounded-md p-3 mb-3 space-y-2">
+            <input [(ngModel)]="nouveauTypeCapteur" placeholder="Type (ex : TEMPERATURE_HUMIDITE)"
+                   class="w-full text-sm border border-gray-300 rounded-md px-2 py-1.5" />
+            <div class="flex flex-wrap gap-2">
+              <button (click)="installerCapteur()" [disabled]="creationCapteurEnCours()"
+                      class="text-sm bg-bordeaux-600 text-white px-3 py-1.5 rounded-md hover:bg-bordeaux-700 disabled:opacity-50">
+                {{ creationCapteurEnCours() ? 'Installation...' : 'Installer' }}
+              </button>
+              <button (click)="fermerFormulaireCapteur()" class="text-sm text-gray-600 px-3 py-1.5 hover:underline">
+                Annuler
+              </button>
+            </div>
+          </div>
+        }
+
+        @if (capteurs().length === 0) {
+          <p class="text-sm text-gray-500">Aucun capteur installé.</p>
+        } @else {
+          <div class="space-y-3">
+            @for (capteur of capteurs(); track capteur.id) {
+              <div class="border-t border-gray-100 pt-3">
+                <p class="text-sm font-medium text-gray-800 mb-2">
+                  Capteur #{{ capteur.id }} — {{ capteur.type }}
+                </p>
+                <p class="text-xs text-gray-400 mb-2">
+                  Pas de vrai matériel connecté : simule ici l'envoi d'une mesure, comme le ferait le capteur physique.
+                </p>
+                <div class="flex items-center gap-2">
+                  <input type="number" placeholder="Température (°C)"
+                         [ngModel]="brouillonMesure(capteur.id).temperature"
+                         (ngModelChange)="brouillonMesure(capteur.id).temperature = $event"
+                         class="text-sm border border-gray-300 rounded-md px-2 py-1 w-36" />
+                  <input type="number" placeholder="Humidité (%)"
+                         [ngModel]="brouillonMesure(capteur.id).humidite"
+                         (ngModelChange)="brouillonMesure(capteur.id).humidite = $event"
+                         class="text-sm border border-gray-300 rounded-md px-2 py-1 w-36" />
+                  <button (click)="simulerMesure(capteur)" [disabled]="mesureEnCours() === capteur.id"
+                          class="text-sm bg-bordeaux-600 text-white px-3 py-1.5 rounded-md hover:bg-bordeaux-700 disabled:opacity-50">
+                    {{ mesureEnCours() === capteur.id ? 'Envoi...' : 'Envoyer la mesure' }}
+                  </button>
+                  <button (click)="toggleHistorique(capteur.id)" class="text-sm text-bordeaux-600 hover:underline">
+                    {{ historiqueOuvert() === capteur.id ? 'Masquer l\'historique' : 'Voir l\'historique' }}
+                  </button>
+                </div>
+
+                @if (historiqueOuvert() === capteur.id) {
+                  <div class="mt-2 bg-gray-50 rounded-md p-2">
+                    @if (historiqueChargement() === capteur.id) {
+                      <p class="text-xs text-gray-500">Chargement...</p>
+                    } @else if ((historiqueMesures()[capteur.id] ?? []).length === 0) {
+                      <p class="text-xs text-gray-500">Aucune mesure enregistrée pour ce capteur.</p>
+                    } @else {
+                      @if (mesures7Jours(capteur.id).length > 0) {
+                        <p class="text-xs text-gray-400 mb-1">
+                          7 derniers jours (rouge = hors seuil du CDC) :
+                        </p>
+                        <div class="grid sm:grid-cols-2 gap-3 mb-3">
+                          <div>
+                            <p class="text-[11px] text-gray-500 mb-1">Température (°C)</p>
+                            <div class="flex items-end gap-0.5 h-20 bg-white rounded border border-gray-100 px-1 pt-1">
+                              @for (mesure of mesures7Jours(capteur.id); track mesure.id) {
+                                <div class="flex-1 rounded-t"
+                                     [class.bg-red-500]="temperatureHorsSeuil(mesure.temperature)"
+                                     [class.bg-bordeaux-400]="!temperatureHorsSeuil(mesure.temperature)"
+                                     [style.height.%]="hauteurTemperature(mesure.temperature)"
+                                     [title]="(mesure.dateMesure | date: 'dd/MM HH:mm') + ' — ' + (mesure.temperature ?? '?') + '°C'">
+                                </div>
+                              }
+                            </div>
+                          </div>
+                          <div>
+                            <p class="text-[11px] text-gray-500 mb-1">Humidité (%)</p>
+                            <div class="flex items-end gap-0.5 h-20 bg-white rounded border border-gray-100 px-1 pt-1">
+                              @for (mesure of mesures7Jours(capteur.id); track mesure.id) {
+                                <div class="flex-1 rounded-t"
+                                     [class.bg-red-500]="humiditeHorsSeuil(mesure.humidite)"
+                                     [class.bg-blue-400]="!humiditeHorsSeuil(mesure.humidite)"
+                                     [style.height.%]="hauteurHumidite(mesure.humidite)"
+                                     [title]="(mesure.dateMesure | date: 'dd/MM HH:mm') + ' — ' + (mesure.humidite ?? '?') + '%'">
+                                </div>
+                              }
+                            </div>
+                          </div>
+                        </div>
+                      }
+                      <p class="text-xs text-gray-400 mb-1">
+                        {{ (historiqueMesures()[capteur.id] ?? []).length }} dernière(s) mesure(s) :
+                      </p>
+                      <div class="space-y-1 max-h-40 overflow-y-auto">
+                        @for (mesure of historiqueMesures()[capteur.id]; track mesure.id) {
+                          <div class="flex justify-between text-xs text-gray-600">
+                            <span>{{ mesure.dateMesure | date: 'dd/MM/yyyy HH:mm' }}</span>
+                            <span>
+                              @if (mesure.temperature !== null) { {{ mesure.temperature }}°C }
+                              @if (mesure.humidite !== null) { — {{ mesure.humidite }}% }
+                            </span>
+                          </div>
+                        }
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        }
+      </div>
+    }
+  </div>
+</div>

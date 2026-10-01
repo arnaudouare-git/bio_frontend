@@ -1,0 +1,93 @@
+<div class="min-h-screen bg-gray-50 p-4 sm:p-8">
+  <div class="max-w-2xl mx-auto">
+    <h1 class="text-2xl font-bold text-gray-900 mb-6">Paiement</h1>
+
+    @if (chargement()) {
+      <p class="text-gray-500">Chargement...</p>
+    } @else if (erreur() && !commande()) {
+      <p class="text-sm text-red-600">{{ erreur() }}</p>
+    } @else if (commande(); as c) {
+      <div class="bg-white rounded-lg shadow p-6 space-y-5">
+        <div>
+          <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2">Recapitulatif</h2>
+          <div class="space-y-1">
+            @for (ligne of c.lignes; track ligne.ligneId) {
+              <div class="flex justify-between text-sm">
+                <span class="text-gray-700">{{ ligne.produitNom }} &times; {{ ligne.quantite }}</span>
+                <span class="text-gray-700">{{ ligne.sousTotal }} FCFA</span>
+              </div>
+            }
+          </div>
+          <div class="flex justify-between font-semibold text-gray-900 border-t border-gray-100 mt-2 pt-2">
+            <span>Total</span>
+            <span>{{ c.montantTotal }} FCFA</span>
+          </div>
+          <p class="text-sm text-gray-500 mt-1">Livraison : {{ c.adresseLivraison }}</p>
+        </div>
+
+        @if (erreur()) {
+          <p class="text-sm text-red-600 bg-red-50 border border-red-200 rounded-md px-3 py-2">{{ erreur() }}</p>
+        }
+
+        @if (paiementReussi(); as paye) {
+          <div class="bg-green-50 border border-green-200 rounded-md p-4">
+            <p class="text-sm text-green-800 font-medium">Paiement reussi ({{ paye.methode }})</p>
+            <p class="text-sm text-green-700">Reference : {{ paye.referenceTransaction || '—' }}</p>
+          </div>
+          <a [routerLink]="['/commandes', c.id]"
+             class="block text-center w-full bg-bordeaux-600 text-white font-semibold py-2.5 rounded-md hover:bg-bordeaux-700">
+            Suivre ma commande
+          </a>
+        } @else if (paiementCash(); as cash) {
+          <div class="bg-blue-50 border border-blue-200 rounded-md p-4">
+            <p class="text-sm text-blue-800 font-medium">Paiement a la livraison enregistre.</p>
+            <p class="text-sm text-blue-700">Prevois {{ c.montantTotal }} FCFA en especes au moment de la livraison.</p>
+          </div>
+          <a [routerLink]="['/commandes', c.id]"
+             class="block text-center w-full bg-bordeaux-600 text-white font-semibold py-2.5 rounded-md hover:bg-bordeaux-700">
+            Suivre ma commande
+          </a>
+        } @else if (paiementEnAttente(); as attente) {
+          <div class="bg-yellow-50 border border-yellow-200 rounded-md p-4 space-y-2">
+            <p class="text-sm text-yellow-800">
+              Paiement Orange Money en attente &mdash; ref. {{ attente.referenceTransaction || '—' }}.
+              En attendant une vraie integration, simule le retour de l'operateur :
+            </p>
+            <div class="flex flex-wrap gap-2">
+              <button (click)="simulerConfirmation(attente, true)" [disabled]="enCours()"
+                      class="text-sm bg-bordeaux-600 text-white px-3 py-1.5 rounded-md hover:bg-bordeaux-700 disabled:opacity-50">
+                Simuler succes
+              </button>
+              <button (click)="simulerConfirmation(attente, false)" [disabled]="enCours()"
+                      class="text-sm bg-red-600 text-white px-3 py-1.5 rounded-md hover:bg-red-700 disabled:opacity-50">
+                Simuler echec
+              </button>
+            </div>
+          </div>
+        } @else {
+          <div>
+            <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2">Methode de paiement</h2>
+            <div class="space-y-2">
+              <label class="flex items-center gap-2 border rounded-md px-3 py-2.5 cursor-pointer"
+                     [class.border-bordeaux-600]="methode() === 'ORANGE_MONEY'"
+                     [class.border-gray-300]="methode() !== 'ORANGE_MONEY'">
+                <input type="radio" name="methode" [checked]="methode() === 'ORANGE_MONEY'" (change)="methode.set('ORANGE_MONEY')" />
+                <span class="text-sm text-gray-800">Orange Money</span>
+              </label>
+              <label class="flex items-center gap-2 border rounded-md px-3 py-2.5 cursor-pointer"
+                     [class.border-bordeaux-600]="methode() === 'CASH'"
+                     [class.border-gray-300]="methode() !== 'CASH'">
+                <input type="radio" name="methode" [checked]="methode() === 'CASH'" (change)="methode.set('CASH')" />
+                <span class="text-sm text-gray-800">Paiement a la livraison (especes)</span>
+              </label>
+            </div>
+          </div>
+          <button (click)="initierPaiement()" [disabled]="enCours()"
+                  class="w-full bg-bordeaux-600 text-white font-semibold py-2.5 rounded-md hover:bg-bordeaux-700 disabled:opacity-50">
+            {{ enCours() ? 'Traitement...' : 'Payer ' + c.montantTotal + ' FCFA' }}
+          </button>
+        }
+      </div>
+    }
+  </div>
+</div>

@@ -1,0 +1,158 @@
+@if (authService.currentUser(); as utilisateur) {
+  <nav class="sticky top-0 z-30 bg-white border-b border-gray-200">
+    <div class="max-w-6xl mx-auto px-4 sm:px-8 h-14 flex items-center justify-between gap-4">
+      <div class="flex items-center gap-6">
+        <a routerLink="/" (click)="fermerMenus()" class="flex items-center gap-2 font-bold text-bordeaux-700 tracking-tight">
+          <img src="logo.jpeg" alt="BioConversion" class="h-8 w-8 rounded-full object-cover" />
+          <span>BioConversion</span>
+        </a>
+
+        <div class="hidden sm:flex items-center gap-5 text-sm">
+          <a routerLink="/produits" class="text-gray-600 hover:text-bordeaux-700">Catalogue</a>
+          <a routerLink="/recherche" class="text-gray-600 hover:text-bordeaux-700">Recherche</a>
+          <a routerLink="/commandes" class="text-gray-600 hover:text-bordeaux-700">Mes commandes</a>
+          <a routerLink="/profil" class="text-gray-600 hover:text-bordeaux-700">Mon profil</a>
+          @if (utilisateur.role === 'PRODUCTEUR') {
+            <a routerLink="/producteur" class="text-gray-600 hover:text-bordeaux-700">Espace Producteur</a>
+          }
+          @if (utilisateur.role === 'ADMINISTRATEUR') {
+            <a routerLink="/admin" class="text-gray-600 hover:text-bordeaux-700">Espace Administrateur</a>
+          }
+        </div>
+      </div>
+
+      <div class="flex items-center gap-4">
+        <a routerLink="/panier" (click)="fermerMenus()" class="relative text-gray-500 hover:text-gray-700 p-1.5 rounded-md hover:bg-gray-50" aria-label="Panier">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" class="w-5 h-5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 0 0-3 3h15.75m-12.75-3h11.218c1.121-2.3 1.94-4.716 2.436-7.235.122-.618-.37-1.185-1-1.185H5.106M7.5 14.25L5.106 5.272M6 18.75a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm12.75 0a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z" />
+          </svg>
+          @if (panierService.nombreArticles() > 0) {
+            <span class="absolute top-0.5 right-0.5 bg-bordeaux-600 text-white text-[10px] font-semibold rounded-full min-w-[1.1rem] h-[1.1rem] flex items-center justify-center px-1">
+              {{ panierService.nombreArticles() > 9 ? '9+' : panierService.nombreArticles() }}
+            </span>
+          }
+        </a>
+
+        <div class="relative">
+          <button
+            type="button"
+            (click)="basculerPanneau()"
+            class="relative text-gray-500 hover:text-gray-700 p-1.5 rounded-md hover:bg-gray-50"
+            aria-label="Notifications"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" class="w-5 h-5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
+            </svg>
+            @if (notifications().length > 0) {
+              <span class="absolute top-0.5 right-0.5 bg-bordeaux-600 text-white text-[10px] font-semibold rounded-full min-w-[1.1rem] h-[1.1rem] flex items-center justify-center px-1">
+                {{ notifications().length > 9 ? '9+' : notifications().length }}
+              </span>
+            }
+          </button>
+
+          @if (panneauOuvert()) {
+            <div class="absolute right-0 mt-2 w-80 max-w-[85vw] bg-white rounded-lg shadow-lg border border-gray-100 max-h-96 overflow-y-auto">
+              <div class="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+                <p class="font-semibold text-gray-900 text-sm">Notifications</p>
+                @if (chargement()) {
+                  <span class="text-xs text-gray-400">Chargement…</span>
+                }
+              </div>
+
+              @if (!chargement() && notifications().length === 0) {
+                <p class="px-4 py-6 text-sm text-gray-500 text-center">Aucune notification pour le moment.</p>
+              }
+
+              @for (notif of notifications(); track notif.id) {
+                <div class="px-4 py-3 border-b border-gray-50 last:border-0">
+                  <div class="flex items-center gap-2 mb-1">
+                    <span class="text-[10px] font-medium uppercase tracking-wide px-1.5 py-0.5 rounded" [class]="badgeCanal(notif.canal)">
+                      {{ notif.canal }}
+                    </span>
+                    <span class="text-xs text-gray-400">{{ notif.dateEnvoi | date: 'dd/MM/yy HH:mm' }}</span>
+                  </div>
+                  <p class="text-sm text-gray-700">{{ notif.message }}</p>
+                </div>
+              }
+            </div>
+          }
+        </div>
+
+        <span class="hidden sm:inline text-sm text-gray-500">{{ utilisateur.prenom }}</span>
+
+        <button
+          type="button"
+          (click)="seDeconnecter()"
+          class="text-sm text-gray-500 hover:text-red-600"
+        >
+          Déconnexion
+        </button>
+
+        <button
+          type="button"
+          (click)="basculerMenuMobile()"
+          class="sm:hidden text-gray-500 hover:text-gray-700 p-1.5 rounded-md hover:bg-gray-50"
+          aria-label="Menu"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" class="w-5 h-5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5M3.75 17.25h16.5" />
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    @if (menuMobileOuvert()) {
+      <div class="sm:hidden border-t border-gray-100 px-4 py-2 flex flex-col gap-2 text-sm">
+        <a routerLink="/produits" (click)="fermerMenus()" class="text-gray-600 hover:text-bordeaux-700 py-1">Catalogue</a>
+        <a routerLink="/recherche" (click)="fermerMenus()" class="text-gray-600 hover:text-bordeaux-700 py-1">Recherche</a>
+        <a routerLink="/commandes" (click)="fermerMenus()" class="text-gray-600 hover:text-bordeaux-700 py-1">Mes commandes</a>
+        <a routerLink="/profil" (click)="fermerMenus()" class="text-gray-600 hover:text-bordeaux-700 py-1">Mon profil</a>
+        @if (utilisateur.role === 'PRODUCTEUR') {
+          <a routerLink="/producteur" (click)="fermerMenus()" class="text-gray-600 hover:text-bordeaux-700 py-1">Espace Producteur</a>
+        }
+        @if (utilisateur.role === 'ADMINISTRATEUR') {
+          <a routerLink="/admin" (click)="fermerMenus()" class="text-gray-600 hover:text-bordeaux-700 py-1">Espace Administrateur</a>
+        }
+      </div>
+    }
+  </nav>
+} @else {
+  <!-- Barre de navigation publique (module ajoute le 2026-09-29, implementation
+       des wireframes -- distinction navbar public/connecte). Visible sur la
+       page d'Accueil et toute autre page publique, avant connexion. -->
+  <nav class="sticky top-0 z-30 bg-white border-b border-gray-200">
+    <div class="max-w-6xl mx-auto px-4 sm:px-8 h-14 flex items-center justify-between gap-4">
+      <a routerLink="/" class="flex items-center gap-2 font-bold text-bordeaux-700 tracking-tight">
+        <img src="logo.jpeg" alt="BioConversion" class="h-8 w-8 rounded-full object-cover" />
+        <span>BioConversion</span>
+      </a>
+
+      <div class="hidden sm:flex items-center gap-5 text-sm">
+        <a routerLink="/produits" class="text-gray-600 hover:text-bordeaux-700">Catalogue</a>
+        <a routerLink="/recherche" class="text-gray-600 hover:text-bordeaux-700">Recherche</a>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <a routerLink="/panier" class="relative text-gray-500 hover:text-gray-700 p-1.5 rounded-md hover:bg-gray-50" aria-label="Panier">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" class="w-5 h-5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 0 0-3 3h15.75m-12.75-3h11.218c1.121-2.3 1.94-4.716 2.436-7.235.122-.618-.37-1.185-1-1.185H5.106M7.5 14.25L5.106 5.272M6 18.75a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm12.75 0a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z" />
+          </svg>
+          @if (panierService.nombreArticles() > 0) {
+            <span class="absolute top-0.5 right-0.5 bg-bordeaux-600 text-white text-[10px] font-semibold rounded-full min-w-[1.1rem] h-[1.1rem] flex items-center justify-center px-1">
+              {{ panierService.nombreArticles() > 9 ? '9+' : panierService.nombreArticles() }}
+            </span>
+          }
+        </a>
+
+        <a routerLink="/connexion" class="text-sm font-medium text-gray-600 hover:text-bordeaux-700">
+          Connexion
+        </a>
+        <a routerLink="/inscription"
+           class="bg-bordeaux-600 text-white text-sm font-semibold py-1.5 px-4 rounded-md hover:bg-bordeaux-700">
+          S'inscrire
+        </a>
+      </div>
+    </div>
+  </nav>
+}
+

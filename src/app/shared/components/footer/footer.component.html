@@ -1,0 +1,38 @@
+<footer class="bg-gray-900 text-gray-300 mt-16">
+  <div class="max-w-6xl mx-auto px-4 sm:px-8 py-10 grid grid-cols-1 sm:grid-cols-3 gap-8">
+    <div>
+      <div class="flex items-center gap-2 mb-3">
+        <img src="logo.jpeg" alt="BioConversion" class="h-8 w-8 rounded-full object-cover" />
+        <span class="font-bold text-white">BioConversion</span>
+      </div>
+      <p class="text-sm text-gray-400">
+        La marketplace burkinabè des larves de mouches soldats noires (BSF) : des producteurs
+        vérifiés, une production suivie en temps réel, livrée directement chez vous.
+      </p>
+    </div>
+
+    <div>
+      <h3 class="text-sm font-semibold text-white mb-3">Navigation</h3>
+      <ul class="space-y-2 text-sm">
+        <li><a routerLink="/produits" class="hover:text-white">Catalogue</a></li>
+        <li><a routerLink="/inscription" class="hover:text-white">Devenir producteur</a></li>
+        <li><a routerLink="/connexion" class="hover:text-white">Connexion</a></li>
+      </ul>
+    </div>
+
+    <div>
+      <h3 class="text-sm font-semibold text-white mb-3">BioConversion</h3>
+      <p class="text-sm text-gray-400">
+        Projet étudiant — Institut Supérieur de Technologie, Licence 3 Réseau Informatique et
+        Télécommunications.
+      </p>
+      <a routerLink="/admin/connexion" class="text-xs text-gray-500 hover:text-gray-300 mt-3 inline-block">
+        Accès administrateur
+      </a>
+    </div>
+  </div>
+
+  <div class="border-t border-gray-800 px-4 sm:px-8 py-4 text-center text-xs text-gray-500">
+    © {{ anneeCourante }} BioConversion. Tous droits réservés.
+  </div>
+</footer>

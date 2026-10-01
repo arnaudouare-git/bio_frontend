@@ -1,0 +1,85 @@
+<div class="min-h-screen bg-gray-50 p-4 sm:p-8">
+  <div class="max-w-3xl mx-auto">
+    <h1 class="text-2xl font-bold text-gray-900 mb-6">Litiges</h1>
+
+    @if (erreur()) {
+      <p class="text-sm text-red-600 bg-red-50 border border-red-200 rounded-md px-3 py-2 mb-4">
+        {{ erreur() }}
+      </p>
+    }
+
+    @if (chargement()) {
+      <p class="text-gray-500">Chargement...</p>
+    } @else if (litiges().length === 0) {
+      <p class="text-gray-500">Aucun litige.</p>
+    } @else {
+      <div class="space-y-3">
+        @for (litige of litiges(); track litige.id) {
+          <div class="bg-white rounded-lg shadow p-4">
+            <div class="flex items-start justify-between mb-2">
+              <div>
+                <p class="font-semibold text-gray-900">
+                  Litige #{{ litige.id }} — Commande #{{ litige.commandeId }}
+                </p>
+                <p class="text-sm text-gray-500">Par {{ litige.auteurNom }}</p>
+                <p class="text-xs text-gray-400">{{ litige.dateCreation | date: 'dd/MM/yyyy HH:mm' }}</p>
+              </div>
+              <span class="text-xs font-medium px-2 py-1 rounded h-fit"
+                    [class.bg-orange-100]="litige.statut === 'OUVERT'" [class.text-orange-700]="litige.statut === 'OUVERT'"
+                    [class.bg-green-100]="litige.statut === 'RESOLU'" [class.text-green-700]="litige.statut === 'RESOLU'"
+                    [class.bg-gray-100]="litige.statut === 'REJETE'" [class.text-gray-600]="litige.statut === 'REJETE'">
+                {{ litige.statut }}
+              </span>
+            </div>
+
+            <p class="text-sm text-gray-700 mb-2">{{ litige.motif }}</p>
+
+            @if (litige.decisionAdmin) {
+              <p class="text-sm text-gray-600 bg-gray-50 rounded-md p-2 mb-2">
+                Décision : {{ litige.decisionAdmin }}
+                @if (litige.dateResolution) {
+                  <span class="text-xs text-gray-400">
+                    ({{ litige.dateResolution | date: 'dd/MM/yyyy HH:mm' }})
+                  </span>
+                }
+              </p>
+            }
+
+            @if (litige.statut === 'OUVERT') {
+              @if (formulaireOuvert() === litige.id) {
+                <div class="bg-orange-50 border border-orange-200 rounded-md p-3 space-y-2">
+                  <select
+                    [ngModel]="statutChoisi[litige.id]"
+                    (ngModelChange)="statutChoisi[litige.id] = $event"
+                    class="text-sm border border-gray-300 rounded-md px-2 py-1.5">
+                    <option value="RESOLU">Résolu</option>
+                    <option value="REJETE">Rejeté</option>
+                  </select>
+                  <textarea
+                    [ngModel]="decisionBrouillon[litige.id]"
+                    (ngModelChange)="decisionBrouillon[litige.id] = $event"
+                    rows="2"
+                    placeholder="Décision (obligatoire)"
+                    class="w-full text-sm border border-gray-300 rounded-md px-2 py-1.5"></textarea>
+                  <div class="flex flex-wrap gap-2">
+                    <button (click)="resoudre(litige)" [disabled]="resolutionEnCours() === litige.id"
+                            class="text-sm bg-orange-600 text-white px-3 py-1.5 rounded-md hover:bg-orange-700 disabled:opacity-50">
+                      Confirmer
+                    </button>
+                    <button (click)="fermerResolution()" class="text-sm text-gray-600 px-3 py-1.5 hover:underline">
+                      Annuler
+                    </button>
+                  </div>
+                </div>
+              } @else {
+                <button (click)="ouvrirResolution(litige.id)" class="text-sm text-orange-600 font-medium hover:underline">
+                  Trancher
+                </button>
+              }
+            }
+          </div>
+        }
+      </div>
+    }
+  </div>
+</div>

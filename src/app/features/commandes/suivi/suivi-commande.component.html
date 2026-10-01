@@ -1,0 +1,93 @@
+<div class="min-h-screen bg-gray-50 p-4 sm:p-8">
+  <div class="max-w-3xl mx-auto">
+    <a routerLink="/commandes" class="text-sm text-gray-500 hover:text-bordeaux-700 inline-flex items-center gap-1 mb-4">
+      &larr; Retour a mes commandes
+    </a>
+
+    @if (chargement()) {
+      <p class="text-gray-500">Chargement...</p>
+    } @else if (erreur() && !commande()) {
+      <p class="text-sm text-red-600">{{ erreur() }}</p>
+    } @else if (commande(); as c) {
+      <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex items-start justify-between mb-6 gap-3">
+          <div>
+            <h1 class="text-xl font-bold text-gray-900">Commande #{{ c.id }}</h1>
+            <p class="text-sm text-gray-500">{{ c.dateCommande | date: 'dd/MM/yyyy HH:mm' }}</p>
+          </div>
+          <span class="text-xs font-medium bg-bordeaux-100 text-bordeaux-700 px-2 py-1 rounded h-fit whitespace-nowrap">
+            {{ c.statut }}
+          </span>
+        </div>
+
+        @if (c.statut === 'ANNULEE') {
+          <div class="bg-red-50 border border-red-200 rounded-md p-4 mb-6">
+            <p class="text-sm text-red-700 font-medium">Cette commande a ete annulee.</p>
+          </div>
+        } @else if (!paiementConfirme()) {
+          <div class="bg-yellow-50 border border-yellow-200 rounded-md p-4 mb-6 flex items-center justify-between gap-3 flex-wrap">
+            <p class="text-sm text-yellow-800">Paiement non finalise.</p>
+            <a [routerLink]="['/commandes', c.id, 'paiement']"
+               class="text-sm font-semibold text-bordeaux-600 hover:underline whitespace-nowrap">
+              Proceder au paiement
+            </a>
+          </div>
+        } @else if (toutesLignesRefusees()) {
+          <div class="bg-red-50 border border-red-200 rounded-md p-4 mb-6">
+            <p class="text-sm text-red-700 font-medium">Tous les articles de cette commande ont ete refuses.</p>
+          </div>
+        } @else {
+          <div class="flex items-center mb-8">
+            @for (etape of etapes; track etape.cle; let i = $index; let last = $last) {
+              <div class="flex items-center" [class.flex-1]="!last">
+                <div class="flex flex-col items-center shrink-0">
+                  <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold"
+                       [class.bg-bordeaux-600]="i <= etapeActiveIndex()"
+                       [class.text-white]="i <= etapeActiveIndex()"
+                       [class.bg-gray-200]="i > etapeActiveIndex()"
+                       [class.text-gray-500]="i > etapeActiveIndex()">
+                    {{ i + 1 }}
+                  </div>
+                  <span class="text-xs text-gray-600 mt-1 text-center w-20">{{ etape.libelle }}</span>
+                </div>
+                @if (!last) {
+                  <div class="flex-1 h-0.5 mx-1"
+                       [class.bg-bordeaux-600]="i < etapeActiveIndex()"
+                       [class.bg-gray-200]="i >= etapeActiveIndex()"></div>
+                }
+              </div>
+            }
+          </div>
+        }
+
+        <div class="border-t border-gray-100 pt-4 space-y-2">
+          @for (ligne of c.lignes; track ligne.ligneId) {
+            <div class="flex items-center justify-between text-sm">
+              <div>
+                <span class="text-gray-800">{{ ligne.produitNom }}</span>
+                <span class="text-gray-500"> &times; {{ ligne.quantite }}</span>
+                <span class="ml-2 text-xs font-medium bg-gray-100 text-gray-600 px-2 py-0.5 rounded">{{ ligne.statut }}</span>
+                @if (ligne.motifRefus) {
+                  <p class="text-xs text-red-600 mt-0.5">Motif du refus : {{ ligne.motifRefus }}</p>
+                }
+              </div>
+              <span class="text-gray-700">{{ ligne.sousTotal }} FCFA</span>
+            </div>
+          }
+        </div>
+
+        <div class="border-t border-gray-100 mt-4 pt-4 flex items-center justify-between flex-wrap gap-2">
+          <p class="font-semibold text-gray-900">Total : {{ c.montantTotal }} FCFA</p>
+          @if (paiementReussi()) {
+            <button (click)="telechargerFacture()" [disabled]="telechargementEnCours()"
+                    class="text-sm text-bordeaux-600 font-medium hover:underline disabled:opacity-50">
+              {{ telechargementEnCours() ? 'Telechargement...' : 'Telecharger la facture' }}
+            </button>
+          }
+        </div>
+
+        <p class="text-sm text-gray-500 mt-4">Livraison : {{ c.adresseLivraison }}</p>
+      </div>
+    }
+  </div>
+</div>

@@ -1,0 +1,84 @@
+<div class="min-h-screen bg-gray-50 p-4 sm:p-8">
+  <div class="max-w-4xl mx-auto">
+    <h1 class="text-2xl font-bold text-gray-900 mb-6">Comptes</h1>
+
+    @if (erreur()) {
+      <p class="text-sm text-red-600 bg-red-50 border border-red-200 rounded-md px-3 py-2 mb-4">
+        {{ erreur() }}
+      </p>
+    }
+
+    <div class="flex gap-2 mb-4">
+      <button (click)="filtreRole.set('TOUS')"
+              class="text-sm px-3 py-1.5 rounded-md"
+              [class.bg-bordeaux-600]="filtreRole() === 'TOUS'" [class.text-white]="filtreRole() === 'TOUS'"
+              [class.bg-white]="filtreRole() !== 'TOUS'" [class.text-gray-600]="filtreRole() !== 'TOUS'">
+        Tous
+      </button>
+      <button (click)="filtreRole.set('PRODUCTEUR')"
+              class="text-sm px-3 py-1.5 rounded-md"
+              [class.bg-bordeaux-600]="filtreRole() === 'PRODUCTEUR'" [class.text-white]="filtreRole() === 'PRODUCTEUR'"
+              [class.bg-white]="filtreRole() !== 'PRODUCTEUR'" [class.text-gray-600]="filtreRole() !== 'PRODUCTEUR'">
+        Producteurs
+      </button>
+      <button (click)="filtreRole.set('CLIENT')"
+              class="text-sm px-3 py-1.5 rounded-md"
+              [class.bg-bordeaux-600]="filtreRole() === 'CLIENT'" [class.text-white]="filtreRole() === 'CLIENT'"
+              [class.bg-white]="filtreRole() !== 'CLIENT'" [class.text-gray-600]="filtreRole() !== 'CLIENT'">
+        Clients
+      </button>
+    </div>
+
+    @if (chargement()) {
+      <p class="text-gray-500">Chargement...</p>
+    } @else if (utilisateursFiltres().length === 0) {
+      <p class="text-gray-500">Aucun compte.</p>
+    } @else {
+      <div class="space-y-2">
+        @for (u of utilisateursFiltres(); track u.id) {
+          <div class="bg-white rounded-lg shadow p-4 flex items-center justify-between">
+            <div>
+              <p class="font-semibold text-gray-900">
+                {{ u.prenom }} {{ u.nom }}
+                <span class="ml-2 text-xs font-medium bg-gray-100 text-gray-600 px-2 py-0.5 rounded">
+                  {{ u.role }}
+                </span>
+                @if (!u.actif) {
+                  <span class="ml-1 text-xs font-medium bg-red-100 text-red-700 px-2 py-0.5 rounded">
+                    SUSPENDU
+                  </span>
+                }
+              </p>
+              <p class="text-sm text-gray-500">{{ u.email }} — {{ u.telephone }}</p>
+              <p class="text-xs text-gray-400">
+                Vérification CNIB : {{ u.statutVerificationCnib }}
+                @if (u.role === 'PRODUCTEUR') {
+                  — Formation : {{ u.formationSuivie ? 'suivie' : 'non suivie' }}
+                }
+              </p>
+            </div>
+            <div class="flex flex-wrap gap-2">
+              @if (peutActiver(u)) {
+                <button (click)="activer(u)" [disabled]="actionEnCours() === u.id"
+                        class="text-sm bg-bordeaux-600 text-white px-3 py-1.5 rounded-md hover:bg-bordeaux-700 disabled:opacity-50">
+                  Activer
+                </button>
+              }
+              @if (u.actif) {
+                <button (click)="suspendre(u)" [disabled]="actionEnCours() === u.id"
+                        class="text-sm bg-red-600 text-white px-3 py-1.5 rounded-md hover:bg-red-700 disabled:opacity-50">
+                  Suspendre
+                </button>
+              } @else {
+                <button (click)="reactiver(u)" [disabled]="actionEnCours() === u.id"
+                        class="text-sm bg-gray-600 text-white px-3 py-1.5 rounded-md hover:bg-gray-700 disabled:opacity-50">
+                  Réactiver
+                </button>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </div>
+</div>

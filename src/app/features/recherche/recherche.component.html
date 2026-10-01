@@ -1,0 +1,104 @@
+<div class="min-h-screen bg-gray-50 p-4 sm:p-8">
+  <div class="max-w-5xl mx-auto">
+    <h1 class="text-2xl font-bold text-gray-900 mb-1">Recherche géolocalisée</h1>
+    <p class="text-sm text-gray-500 mb-6">
+      Trouve les producteurs les plus proches de toi et leurs produits disponibles.
+    </p>
+
+    @if (erreur()) {
+      <p class="text-sm text-red-600 bg-red-50 border border-red-200 rounded-md px-3 py-2 mb-4">
+        {{ erreur() }}
+      </p>
+    }
+
+    <!-- Filtres -->
+    <div class="bg-white rounded-lg shadow p-4 mb-4">
+      <div class="grid sm:grid-cols-2 lg:grid-cols-5 gap-3 items-end">
+        <div>
+          <label class="block text-xs text-gray-500 mb-1">Latitude</label>
+          <input type="number" [(ngModel)]="latitude" step="0.0001" placeholder="ex : 12.3714"
+                 class="w-full text-sm border border-gray-300 rounded-md px-2 py-1.5" />
+        </div>
+        <div>
+          <label class="block text-xs text-gray-500 mb-1">Longitude</label>
+          <input type="number" [(ngModel)]="longitude" step="0.0001" placeholder="ex : -1.5197"
+                 class="w-full text-sm border border-gray-300 rounded-md px-2 py-1.5" />
+        </div>
+        <div>
+          <label class="block text-xs text-gray-500 mb-1">Rayon (km)</label>
+          <input type="number" [(ngModel)]="rayonKm" min="1"
+                 class="w-full text-sm border border-gray-300 rounded-md px-2 py-1.5" />
+        </div>
+        <div>
+          <label class="block text-xs text-gray-500 mb-1">Stock minimum</label>
+          <input type="number" [(ngModel)]="stockMin" min="0"
+                 class="w-full text-sm border border-gray-300 rounded-md px-2 py-1.5" />
+        </div>
+        <div class="flex gap-2">
+          <button (click)="tenterGeolocalisation()" [disabled]="geolocalisationEnCours()"
+                  class="text-sm text-bordeaux-600 border border-bordeaux-300 px-3 py-1.5 rounded-md hover:bg-bordeaux-50 disabled:opacity-50 whitespace-nowrap">
+            {{ geolocalisationEnCours() ? '...' : '📍 Me localiser' }}
+          </button>
+          <button (click)="rechercher()" [disabled]="chargement()"
+                  class="text-sm bg-bordeaux-600 text-white px-4 py-1.5 rounded-md hover:bg-bordeaux-700 disabled:opacity-50 flex-1">
+            {{ chargement() ? 'Recherche...' : 'Rechercher' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid lg:grid-cols-3 gap-4">
+      <!-- Carte -->
+      <div class="lg:col-span-2 bg-white rounded-lg shadow overflow-hidden">
+        <div #carte class="w-full" style="height: 500px;"></div>
+      </div>
+
+      <!-- Liste des producteurs -->
+      <div class="bg-white rounded-lg shadow p-4">
+        <p class="font-semibold text-gray-900 mb-3">
+          Producteurs à proximité
+          @if (producteursGroupes().length > 0) {
+            <span class="text-sm font-normal text-gray-500">({{ producteursGroupes().length }})</span>
+          }
+        </p>
+
+        @if (!rechercheLancee()) {
+          <p class="text-sm text-gray-500">
+            Autorise la géolocalisation ou saisis une position, puis lance la recherche.
+          </p>
+        } @else if (chargement()) {
+          <p class="text-sm text-gray-500">Chargement...</p>
+        } @else if (producteursGroupes().length === 0) {
+          <p class="text-sm text-gray-500">Aucun producteur trouvé dans ce rayon.</p>
+        } @else {
+          <div class="space-y-3 max-h-[460px] overflow-y-auto">
+            @for (groupe of producteursGroupes(); track groupe.producteurId) {
+              <button (click)="centrerSur(groupe)" class="w-full text-left border-b border-gray-100 pb-3 hover:bg-gray-50 rounded-md p-1.5 -m-1.5">
+                <div class="flex items-center justify-between">
+                  <p class="font-medium text-gray-900 text-sm">{{ groupe.producteurNom }}</p>
+                  @if (groupe.distanceKm !== null) {
+                    <span class="text-xs text-gray-500">{{ groupe.distanceKm }} km</span>
+                  }
+                </div>
+                <p class="text-xs text-gray-500 mt-1">
+                  {{ groupe.produits.length }} produit(s) disponible(s)
+                </p>
+                <ul class="mt-1 space-y-0.5">
+                  @for (produit of groupe.produits; track produit.id) {
+                    <li class="text-xs text-gray-600">
+                      <a [routerLink]="['/produits', produit.id]" class="hover:text-bordeaux-600 hover:underline"
+                         (click)="$event.stopPropagation()">
+                        {{ produit.nom }}
+                      </a>
+                      — {{ produit.prixUnitaire }} FCFA (stock : {{ produit.stock }})
+                    </li>
+                  }
+                </ul>
+              </button>
+            }
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+</div>
